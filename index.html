@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIFE OS — Mohamad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=Bricolage+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN: Refined dark editorial — like a luxury
+   personal command center. Warm off-blacks, aged
+   paper accents, precise mono typography.
+   Unforgettable: the glowing orb ambient light.
+════════════════════════════════════════════════ */
+:root {
+  --ink:    #0d0d10;
+  --ink2:   #13131a;
+  --ink3:   #1c1c28;
+  --line:   #252535;
+  --line2:  #2e2e42;
+  --fog:    #4a4a6a;
+  --mist:   #6e6e90;
+  --silver: #a0a0c0;
+  --paper:  #e8e4dc;
+  --cream:  #f5f0e8;
+  --gold:   #c8a96e;
+  --gold2:  #e8c98e;
+  --ember:  #e86c4a;
+  --jade:   #4acca0;
+  --sky:    #5ab8f0;
+  --rose:   #e87878;
+  --violet: #9878e8;
+
+  --r-serif: 'Instrument Serif', Georgia, serif;
+  --r-mono:  'Geist Mono', 'Courier New', monospace;
+  --r-sans:  'Bricolage Grotesque', system-ui, sans-serif;
+
+  --sidebar-w: 220px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.3);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--r-mono);
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* ── Ambient orb ── */
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px; left: 50%;
+  transform: translateX(-50%);
+  width: 900px; height: 900px;
+  background: radial-gradient(ellipse, rgba(200,169,110,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+
+/* ═══════════ SYNC BAR ═══════════ */
+#sync-bar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px; z-index: 9999;
+  background: linear-gradient(90deg, var(--gold), var(--jade), var(--gold));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+  display: none;
+}
+#sync-bar.active { display: block; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ═══════════ LAYOUT ═══════════ */
+#app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--ink2);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 50;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo {
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.sidebar-logo .wordmark {
+  font-family: var(--r-serif);
+  font-size: 22px;
+  letter-spacing: -0.3px;
+  color: var(--cream);
+  line-height: 1;
+}
+.sidebar-logo .wordmark em {
+  font-style: italic;
+  color: var(--gold);
+}
+.sidebar-logo .sub {
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  color: var(--fog);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.sidebar-score {
+  margin: 16px 20px;
+  background: var(--ink3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.score-label { font-size: 8px; letter-spacing: 2px; color: var(--fog); text-transform: uppercase; margin-bottom: 6px; }
+.score-ring {
+  display: flex; align-items: center; gap: 12px;
+}
+.score-num {
+  font-family: var(--r-serif);
+  font-size: 38px;
+  color: var(--gold);
+  line-height: 1;
+}
+.score-bars { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.score-bar-row { display: flex; align-items: center; gap: 6px; }
+.score-bar-label { font-size: 8px; color: var(--fog); width: 24px; }
+.score-bar-track { flex: 1; height: 2px; background: var(--line2); border-radius: 1px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 1px; }
+
+nav.sidebar-nav {
+  flex: 1;
+  padding: 8px 0;
+  overflow-y: auto;
+}
+.nav-section {
+  padding: 16px 20px 4px;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--fog);
+  text-transform: uppercase;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  cursor: pointer;
+  color: var(--mist);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  user-select: none;
+}
+.nav-item:hover { color: var(--paper); background: rgba(255,255,255,0.03); }
+.nav-item.active {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  background: rgba(200,169,110,0.06);
+}
+.nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+.nav-item .badge {
+  margin-left: auto;
+  background: var(--ember);
+  color: white;
+  font-size: 8px;
+  padding: 1px 5px;
+  border-radius: 99px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sync-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 9px; color: var(--fog); letter-spacing: 0.5px;
+}
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--fog); flex-shrink: 0; }
+.sync-dot.ok { background: var(--jade); box-shadow: 0 0 6px var(--jade); }
+.sync-dot.err { background: var(--rose); }
+.sync-dot.syncing { background: var(--gold); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+.btn-sidebar {
+  background: var(--ink3);
+  border: 1px solid var(--line);
+  color: var(--silver);
+  font-family: var(--r-mono);
+  font-size: 10px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+.btn-sidebar:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── Main content ── */
+#content {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(13,13,16,0.8);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.page-title {
+  font-family: var(--r-serif);
+  font-size: 20px;
+  color: var(--cream);
+  font-style: italic;
+}
+.page-date { font-size: 10px; color: var(--fog); letter-spacing: 0.5px; }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.btn {
+  font-family: var(--r-mono);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--line2);
+  background: var(--ink3);
+  color: var(--silver);
+}
+.btn:hover { border-color: var(--silver); color: var(--cream); }
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border-color: var(--gold);
+  color: var(--ink);
+  font-weight: 600;
+}
+.btn-gold:hover { filter: brightness(1.1); color: var(--ink); }
+.btn-ghost { background: transparent; border-color: transparent; }
+.btn-ghost:hover { background: var(--ink3); border-color: var(--line); }
+.btn-danger { border-color: rgba(232,120,120,0.3); color: var(--rose); background: rgba(232,120,120,0.06); }
+.btn-danger:hover { background: var(--rose); color: white; border-color: var(--rose); }
+.btn-sm { padding: 4px 10px; font-size: 9px; }
+.btn-icon { padding: 6px 8px; }
+
+.page-body { padding: 28px 32px; flex: 1; }
+
+/* ── Pages ── */
+.page { display: none; }
+.page.active { display: block; animation: pageIn 0.2s ease; }
+@keyframes pageIn { from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)} }
+
+/* ═══════════ GRID SYSTEM ═══════════ */
+.g2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.g-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+/* ═══════════ CARDS ═══════════ */
+.card {
+  background: var(--ink2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--line2); }
+.card-accent-top::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.4;
+}
+.card-gold { color: var(--gold); }
+.card-jade { color: var(--jade); }
+.card-sky { color: var(--sky); }
+.card-ember { color: var(--ember); }
+.card-violet { color: var(--violet); }
+
+.card-eyebrow {
+  font-size: 8px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-bottom: 8px;
+}
+.card-value {
+  font-family: var(--r-serif);
+  font-size: 42px;
+  line-height: 1;
+  color: var(--cream);
+}
+.card-value.gold { color: var(--gold); }
+.card-value.jade { color: var(--jade); }
+.card-value.ember { color: var(--ember); }
+.card-value.sky { color: var(--sky); }
+.card-sub { font-size: 10px; color: var(--fog); margin-top: 4px; }
+
+/* ═══════════ SECTION HEADERS ═══════════ */
+.section-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.section-title {
+  font-family: var(--r-serif);
+  font-size: 28px;
+  font-style: italic;
+  color: var(--cream);
+  line-height: 1;
+}
+.section-sub { font-size: 10px; color: var(--fog); margin-top: 4px; letter-spacing: 0.3px; }
+
+/* ═══════════ DIVIDER ═══════════ */
+.divider { height: 1px; background: var(--line); margin: 20px 0; }
+.vspace { height: 20px; }
+
+/* ═══════════ PROGRESS ═══════════ */
+.prog-wrap { margin: 6px 0; }
+.prog-header { display: flex; justify-content: space-between; font-size: 9px; color: var(--fog); margin-bottom: 5px; }
+.prog-track { height: 3px; background: var(--line2); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 2px; background: var(--gold); transition: width 0.6s ease; }
+
+/* ═══════════ TAGS / CHIPS ═══════════ */
+.chip {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 9px;
+  letter-spacing: 0.3px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.chip-gold { color: var(--gold); border-color: rgba(200,169,110,0.35); background: rgba(200,169,110,0.08); }
+.chip-jade { color: var(--jade); border-color: rgba(74,204,160,0.35); background: rgba(74,204,160,0.08); }
+.chip-ember { color: var(--ember); border-color: rgba(232,108,74,0.35); background: rgba(232,108,74,0.08); }
+.chip-sky { color: var(--sky); border-color: rgba(90,184,240,0.35); background: rgba(90,184,240,0.08); }
+.chip-violet { color: var(--violet); border-color: rgba(152,120,232,0.35); background: rgba(152,120,232,0.08); }
+.chip-rose { color: var(--rose); border-color: rgba(232,120,120,0.35); background: rgba(232,120,120,0.08); }
+
+/* ═══════════ FORM ELEMENTS ═══════════ */
+.form-grid { display: grid; gap: 12px; }
+.form-row { display: flex; gap: 10px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--fog); }
+.input {
+  background: var(--ink3);
+  border: 1px solid var(--line2);
+  color: var(--paper);
+  font-family: var(--r-mono);
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--gold); }
+.input::placeholder { color: var(--fog); }
+select.input {
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234a4a6a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; }
+.checkbox-row input[type=checkbox] { width: 14px; height: 14px; accent-color: var(--gold); }
+.checkbox-row label { font-size: 11px; color: var(--silver); cursor: pointer; }
+
+/* Panel for add/edit forms */
+.form-panel {
+  background: var(--ink3);
+  border: 1px solid var(--line2);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  display: none;
+}
+.form-panel.open { display: block; animation: slideDown 0.15s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)} }
+
+/* ═══════════ ROWS (list items) ═══════════ */
+.row-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.row-item:last-child { border-bottom: none; }
+.row-item:hover .row-actions { opacity: 1; }
+.row-actions { opacity: 0; display: flex; gap: 4px; transition: opacity 0.15s; flex-shrink: 0; }
+.btn-edit {
+  background: none; border: 1px solid var(--line2); color: var(--fog);
+  font-family: var(--r-mono); font-size: 10px; padding: 3px 8px;
+  border-radius: 5px; cursor: pointer; transition: all 0.15s;
+}
+.btn-edit:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Checkbox */
+.check-box {
+  width: 17px; height: 17px; border: 1.5px solid var(--line2);
+  border-radius: 5px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.check-box:hover { border-color: var(--gold); }
+.check-box.checked { background: var(--gold); border-color: var(--gold); }
+.check-box.checked::after { content: '✓'; font-size: 10px; color: var(--ink); font-weight: 700; }
+
+/* Priority dot */
+.prio-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.p-high { background: var(--ember); }
+.p-med  { background: var(--gold); }
+.p-low  { background: var(--jade); }
+
+/* ═══════════ HABIT TRACKER ═══════════ */
+.habit-heatmap {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-top: 10px;
+}
+.hm-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--line);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.hm-cell:hover { transform: scale(1.2); }
+.hm-0 { background: var(--line); }
+.hm-1 { background: rgba(200,169,110,0.3); }
+.hm-2 { background: rgba(200,169,110,0.6); }
+.hm-3 { background: var(--gold); }
+.hm-4 { background: var(--jade); }
+
+.week-dots { display: flex; gap: 3px; }
+.wd { width: 7px; height: 7px; border-radius: 2px; background: var(--line); }
+.wd.on { background: var(--jade); }
+
+/* ═══════════ SPARKLINE ═══════════ */
+.sparkline { display: flex; align-items: flex-end; gap: 2px; height: 36px; }
+.sp-bar { flex: 1; background: var(--line2); border-radius: 2px 2px 0 0; min-height: 3px; transition: background 0.2s; }
+.sp-bar:hover { background: var(--gold); }
+.sp-bar.hi { background: rgba(200,169,110,0.45); }
+
+/* ═══════════ MODAL ═══════════ */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--ink2);
+  border: 1px solid var(--line2);
+  border-radius: 14px;
+  padding: 28px;
+  width: 100%; max-width: 500px;
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: modalIn 0.2s ease;
+  box-shadow: var(--shadow), 0 0 60px rgba(0,0,0,0.5);
+}
+@keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)} }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--line);
+}
+.modal-title { font-family: var(--r-serif); font-size: 20px; font-style: italic; color: var(--cream); }
+.modal-close {
+  background: none; border: 1px solid var(--line2); color: var(--fog);
+  cursor: pointer; padding: 5px 10px; border-radius: 6px; font-size: 12px; transition: all 0.15s;
+}
+.modal-close:hover { border-color: var(--silver); color: var(--silver); }
+.modal-field { margin-bottom: 14px; }
+.modal-field label { display: block; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--fog); margin-bottom: 5px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+/* ═══════════ SETUP SCREEN ═══════════ */
+#setup-screen {
+  position: fixed; inset: 0;
+  background: var(--ink);
+  z-index: 999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.setup-box {
+  max-width: 440px; width: 100%;
+  background: var(--ink2);
+  border: 1px solid var(--line2);
+  border-radius: 16px;
+  padding: 36px;
+}
+.setup-wordmark {
+  font-family: var(--r-serif);
+  font-size: 32px;
+  font-style: italic;
+  color: var(--cream);
+  margin-bottom: 4px;
+}
+.setup-wordmark span { color: var(--gold); }
+.setup-sub { font-size: 10px; color: var(--fog); margin-bottom: 28px; letter-spacing: 0.5px; }
+.setup-step { margin-bottom: 20px; }
+.setup-step-num {
+  font-size: 8px; letter-spacing: 2px; color: var(--gold);
+  text-transform: uppercase; margin-bottom: 5px;
+}
+.setup-step p { font-size: 11px; color: var(--silver); line-height: 1.7; margin-bottom: 10px; }
+.setup-step a { color: var(--gold); text-decoration: none; }
+.setup-step a:hover { text-decoration: underline; }
+.setup-error { color: var(--rose); font-size: 10px; margin-top: 8px; display: none; }
+
+/* ═══════════ FINANCE ROWS ═══════════ */
+.tx-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--ink3); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.tx-info { flex: 1; }
+.tx-name { font-size: 12px; color: var(--paper); }
+.tx-meta { font-size: 9px; color: var(--fog); margin-top: 1px; }
+.tx-amount { font-family: var(--r-serif); font-size: 16px; }
+
+/* ═══════════ FOCUS TIMER ═══════════ */
+.timer-display {
+  font-family: var(--r-serif);
+  font-size: 80px;
+  font-style: italic;
+  color: var(--gold);
+  letter-spacing: -3px;
+  line-height: 1;
+  text-align: center;
+  padding: 20px 0;
+  text-shadow: 0 0 40px rgba(200,169,110,0.3);
+}
+.timer-task {
+  text-align: center;
+  font-size: 13px;
+  color: var(--silver);
+  margin-bottom: 20px;
+  font-style: italic;
+}
+.timer-controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* ═══════════ GOAL CARD ═══════════ */
+.goal-card {
+  background: var(--ink3);
+  border: 1px solid var(--line2);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.goal-card:hover .row-actions { opacity: 1; }
+.goal-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.goal-name { font-size: 13px; color: var(--paper); font-weight: 500; }
+.goal-pct { font-family: var(--r-serif); font-size: 24px; color: var(--gold); }
+
+/* ═══════════ JOURNAL ═══════════ */
+.journal-entry {
+  background: var(--ink3);
+  border: 1px solid var(--line2);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  transition: border-left-color 0.2s;
+}
+.journal-entry:hover { border-left-color: var(--jade); }
+.journal-entry:hover .row-actions { opacity: 1; }
+.j-date { font-size: 9px; color: var(--fog); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.j-title { font-family: var(--r-serif); font-size: 17px; color: var(--cream); margin-bottom: 8px; font-style: italic; }
+.j-text { font-size: 12px; color: var(--silver); line-height: 1.8; white-space: pre-wrap; }
+.j-gratitude { font-size: 10px; color: var(--jade); margin-top: 10px; }
+
+/* ═══════════ HEALTH STATS ═══════════ */
+.health-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 11px;
+}
+.health-row:last-child { border-bottom: none; }
+.health-row:hover .row-actions { opacity: 1; }
+.h-date { width: 80px; color: var(--fog); font-size: 10px; flex-shrink: 0; }
+.h-chips { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+
+/* ═══════════ PROJECT CARD ═══════════ */
+.proj-card {
+  background: var(--ink2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.proj-card:hover { border-color: var(--line2); }
+.proj-card:hover .row-actions { opacity: 1; }
+.proj-name { font-family: var(--r-sans); font-size: 15px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
+.proj-desc { font-size: 11px; color: var(--fog); margin-bottom: 14px; line-height: 1.6; }
+.status-pip { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+/* ═══════════ OVERVIEW LAYOUT ═══════════ */
+.ov-hero { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.ov-mid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 20px; }
+
+/* ═══════════ EMPTY STATE ═══════════ */
+.empty {
+  text-align: center; padding: 40px 20px;
+  color: var(--fog); font-size: 11px; line-height: 2;
+}
+.empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+/* ═══════════ MOBILE HAMBURGER ═══════════ */
+#hamburger {
+  display: none;
+  background: none; border: 1px solid var(--line2);
+  color: var(--silver); cursor: pointer; padding: 6px 10px;
+  border-radius: 6px; font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  :root { --sidebar-w: 0px; }
+  #sidebar { transform: translateX(-100%); width: 240px; }
+  #sidebar.mobile-open { transform: translateX(0); }
+  #content { margin-left: 0; }
+  #hamburger { display: flex; }
+  .ov-hero { grid-template-columns: repeat(2,1fr); }
+  .ov-mid, .g2, .g3, .g4 { grid-template-columns: 1fr; }
+  .page-body { padding: 16px; }
+  .topbar { padding: 14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="sync-bar"></div>
+
+<!-- ══════════════ SETUP SCREEN ══════════════ -->
+<div id="setup-screen">
+  <div class="setup-box">
+    <div class="setup-wordmark">Life <span>OS</span></div>
+    <div class="setup-sub">Your personal command center — synced globally via GitHub</div>
+
+    <div class="setup-step">
+      <div class="setup-step-num">Step 1 — Create a GitHub PAT</div>
+      <p>Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
+      Select <strong>Classic token</strong> → tick <strong>gist</strong> scope only → click <strong>Generate</strong><br>
+      Copy the token (starts with <code>ghp_</code>)</p>
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-step-num">Step 2 — Paste it here</div>
+      <div class="field">
+        <label>GitHub Personal Access Token</label>
+        <input class="input" id="pat-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      </div>
+      <div class="setup-error" id="pat-error"></div>
+    </div>
+
+    <button class="btn btn-gold" style="width:100%;margin-top:8px;padding:11px;" onclick="initWithPAT()">
+      Connect &amp; Launch →
+    </button>
+
+    <p style="font-size:9px;color:var(--fog);margin-top:14px;line-height:1.7;">
+      Your token is stored only in this browser's localStorage. It is sent exclusively to api.github.com to read/write a private Gist that holds your data. No third-party servers. Ever.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="app" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="wordmark">Life <em>OS</em></div>
+      <div class="sub">Mohamad · Command Center</div>
+    </div>
+
+    <div class="sidebar-score">
+      <div class="score-label">Life Score</div>
+      <div class="score-ring">
+        <div class="score-num" id="life-score">—</div>
+        <div class="score-bars" id="score-bars"></div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Core</div>
+      <div class="nav-item active" onclick="goTo('overview',this)"><span class="icon">◈</span> Overview</div>
+      <div class="nav-item" onclick="goTo('tasks',this)"><span class="icon">◻</span> Tasks <span class="badge" id="badge-tasks">0</span></div>
+      <div class="nav-item" onclick="goTo('habits',this)"><span class="icon">◎</span> Habits</div>
+      <div class="nav-item" onclick="goTo('focus',this)"><span class="icon">◉</span> Focus</div>
+
+      <div class="nav-section">Body & Mind</div>
+      <div class="nav-item" onclick="goTo('health',this)"><span class="icon">♡</span> Health</div>
+      <div class="nav-item" onclick="goTo('journal',this)"><span class="icon">✦</span> Journal</div>
+
+      <div class="nav-section">Build & Grow</div>
+      <div class="nav-item" onclick="goTo('goals',this)"><span class="icon">◬</span> Goals</div>
+      <div class="nav-item" onclick="goTo('projects',this)"><span class="icon">⬡</span> Projects</div>
+
+      <div class="nav-section">Money</div>
+      <div class="nav-item" onclick="goTo('finance',this)"><span class="icon">◇</span> Finance</div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sync-status">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">Not connected</span>
+      </div>
+      <button class="btn-sidebar" onclick="manualSync()">↻ Sync Now</button>
+      <button class="btn-sidebar" onclick="showSettings()">⚙ Settings</button>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main id="content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button id="hamburger" onclick="toggleSidebar()">☰</button>
+        <div>
+          <div class="page-title" id="topbar-title">Overview</div>
+          <div class="page-date" id="topbar-date">—</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="manualSync()" id="sync-btn">↻ Sync</button>
+        <button class="btn btn-gold btn-sm" id="quick-add-btn" onclick="quickAdd()">+ Quick Add</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ══════ OVERVIEW ══════ -->
+      <div class="page active" id="page-overview">
+        <div class="ov-hero">
+          <div class="card card-accent-top card-gold">
+            <div class="card-eyebrow">Tasks Today</div>
+            <div class="card-value gold" id="ov-tasks">—/—</div>
+            <div class="card-sub" id="ov-tasks-sub">open today</div>
+          </div>
+          <div class="card card-accent-top card-jade">
+            <div class="card-eyebrow">Best Streak</div>
+            <div class="card-value jade" id="ov-streak">—</div>
+            <div class="card-sub">days running</div>
+          </div>
+          <div class="card card-accent-top card-sky">
+            <div class="card-eyebrow">Net Balance</div>
+            <div class="card-value sky" id="ov-net" style="font-size:30px;">$—</div>
+            <div class="card-sub">income − expenses</div>
+          </div>
+          <div class="card card-accent-top card-ember">
+            <div class="card-eyebrow">Energy</div>
+            <div class="card-value ember" id="ov-energy">—</div>
+            <div class="card-sub">last logged</div>
+          </div>
+        </div>
+
+        <div class="ov-mid">
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-eyebrow" style="margin-bottom:14px;">Life Balance</div>
+              <div id="ov-balance"></div>
+              <div class="divider"></div>
+              <div class="card-eyebrow" style="margin-bottom:8px;">14-Day Activity</div>
+              <div class="sparkline" id="ov-sparkline"></div>
+            </div>
+            <div class="card">
+              <div class="card-eyebrow" style="margin-bottom:12px;">High Priority</div>
+              <div id="ov-priorities"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-eyebrow" style="margin-bottom:12px;">Active Goals</div>
+              <div id="ov-goals"></div>
+            </div>
+            <div class="card">
+              <div class="card-eyebrow" style="margin-bottom:12px;">Mood This Week</div>
+              <div id="ov-mood" style="display:flex;gap:6px;justify-content:space-between;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ TASKS ══════ -->
+      <div class="page" id="page-tasks">
+        <div class="section-head">
+          <div><div class="section-title">Tasks</div><div class="section-sub">Capture everything. Execute ruthlessly.</div></div>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('task-panel')">+ New Task</button>
+        </div>
+        <div class="form-panel" id="task-panel">
+          <div class="g2">
+            <div class="field"><label>Task</label><input class="input" id="t-text" placeholder="What needs to be done?"></div>
+            <div class="field"><label>Area</label>
+              <select class="input" id="t-area"><option value="work">Work</option><option value="personal">Personal</option><option value="health">Health</option><option value="finance">Finance</option><option value="tech">Tech</option><option value="social">Social</option></select>
+            </div>
+            <div class="field"><label>Priority</label>
+              <select class="input" id="t-prio"><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option></select>
+            </div>
+            <div class="field"><label>Bucket</label>
+              <select class="input" id="t-bucket"><option value="today">Today</option><option value="upcoming">Upcoming</option><option value="backlog">Backlog</option></select>
+            </div>
+            <div class="field"><label>Due Date</label><input class="input" id="t-due" type="date"></div>
+            <div class="field"><label>Notes</label><input class="input" id="t-notes" placeholder="optional"></div>
+          </div>
+          <div class="form-row" style="margin-top:14px;gap:8px;">
+            <button class="btn btn-gold" onclick="addTask()">Save Task</button>
+            <button class="btn" onclick="closePanel('task-panel')">Cancel</button>
+          </div>
+        </div>
+        <div class="g2">
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-eyebrow" style="margin-bottom:12px;">Today <span class="chip chip-ember" id="t-today-ct">0</span></div>
+              <div id="tasks-today"></div>
+            </div>
+            <div class="card">
+              <div class="card-eyebrow" style="margin-bottom:12px;">Upcoming</div>
+              <div id="tasks-upcoming"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-eyebrow" style="margin-bottom:12px;">Backlog</div>
+              <div id="tasks-backlog"></div>
+            </div>
+            <div class="card">
+              <div class="card-eyebrow" style="margin-bottom:12px;">Done <span class="chip chip-jade" id="t-done-ct">0</span></div>
+              <div id="tasks-done"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ HABITS ══════ -->
+      <div class="page" id="page-habits">
+        <div class="section-head">
+          <div><div class="section-title">Habits</div><div class="section-sub">Small daily wins compound into transformation.</div></div>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('habit-panel')">+ New Habit</button>
+        </div>
+        <div class="form-panel" id="habit-panel">
+          <div class="g2">
+            <div class="field"><label>Habit Name</label><input class="input" id="h-name" placeholder="e.g. Morning workout"></div>
+            <div class="field"><label>Category</label>
+              <select class="input" id="h-cat"><option value="health">Health</option><option value="mind">Mind</option><option value="work">Work</option><option value="social">Social</option></select>
+            </div>
+            <div class="field"><label>Frequency</label>
+              <select class="input" id="h-freq"><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option></select>
+            </div>
+            <div class="field"><label>Target Time</label><input class="input" id="h-time" placeholder="07:00"></div>
+          </div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="addHabit()">Save Habit</button>
+            <button class="btn" onclick="closePanel('habit-panel')">Cancel</button>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-eyebrow" style="margin-bottom:14px;">Today's Check-In</div>
+            <div id="habits-checkin"></div>
+          </div>
+          <div class="card">
+            <div class="card-eyebrow" style="margin-bottom:6px;">28-Day Heatmap</div>
+            <div style="font-size:8px;color:var(--fog);display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:3px;margin-bottom:4px;letter-spacing:1px;">M T W T F S S</div>
+            <div class="habit-heatmap" id="habit-heatmap"></div>
+          </div>
+        </div>
+        <div class="vspace"></div>
+        <div class="card">
+          <div class="card-eyebrow" style="margin-bottom:14px;">Streaks & Analytics</div>
+          <div id="habit-analytics"></div>
+        </div>
+      </div>
+
+      <!-- ══════ FOCUS ══════ -->
+      <div class="page" id="page-focus">
+        <div class="section-head">
+          <div><div class="section-title">Focus</div><div class="section-sub">One thing. Full attention. No compromise.</div></div>
+        </div>
+        <div class="g2">
+          <div class="card" style="text-align:center;">
+            <div class="card-eyebrow">Pomodoro Timer</div>
+            <div class="timer-task" id="focus-task-label">No task selected</div>
+            <div class="timer-display" id="focus-display">25:00</div>
+            <div class="timer-controls">
+              <button class="btn btn-gold" onclick="startTimer()" id="focus-start">▶ Start</button>
+              <button class="btn" onclick="pauseTimer()" id="focus-pause" style="display:none">⏸ Pause</button>
+              <button class="btn" onclick="resetTimer()">↺ Reset</button>
+            </div>
+            <div class="divider"></div>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+              <button class="btn btn-sm" onclick="setTimer(25)">25 min</button>
+              <button class="btn btn-sm" onclick="setTimer(50)">50 min</button>
+              <button class="btn btn-sm" onclick="setTimer(90)">90 min</button>
+              <button class="btn btn-sm" onclick="setTimer(5)">5 min break</button>
+              <button class="btn btn-sm" onclick="setTimer(15)">15 min break</button>
+            </div>
+            <div class="divider"></div>
+            <div class="card-eyebrow" style="margin-bottom:8px;">Today's Total</div>
+            <div style="font-family:var(--r-serif);font-size:32px;color:var(--gold)" id="focus-total">0m</div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-eyebrow" style="margin-bottom:12px;">Select Task to Focus</div>
+              <div id="focus-picker"></div>
+            </div>
+            <div class="card">
+              <div class="card-eyebrow" style="margin-bottom:12px;">Today's Sessions</div>
+              <div id="focus-sessions"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ HEALTH ══════ -->
+      <div class="page" id="page-health">
+        <div class="section-head">
+          <div><div class="section-title">Health</div><div class="section-sub">Body is infrastructure. Maintain it daily.</div></div>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('health-panel')">+ Log Entry</button>
+        </div>
+        <div class="form-panel" id="health-panel">
+          <div class="g4">
+            <div class="field"><label>Date</label><input class="input" id="he-date" type="date"></div>
+            <div class="field"><label>Steps</label><input class="input" id="he-steps" placeholder="8500"></div>
+            <div class="field"><label>Sleep (hrs)</label><input class="input" id="he-sleep" placeholder="7.5"></div>
+            <div class="field"><label>Water (L)</label><input class="input" id="he-water" placeholder="2.0"></div>
+            <div class="field"><label>Calories</label><input class="input" id="he-cal" placeholder="1900"></div>
+            <div class="field"><label>Energy (1-10)</label><input class="input" id="he-energy" type="number" min="1" max="10" placeholder="7"></div>
+            <div class="field"><label>Weight (kg)</label><input class="input" id="he-weight" placeholder="optional"></div>
+            <div class="field"><label>Notes</label><input class="input" id="he-notes" placeholder="optional"></div>
+          </div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="saveHealthEntry()">Save Entry</button>
+            <button class="btn" onclick="closePanel('health-panel')">Cancel</button>
+          </div>
+        </div>
+        <div class="g4" style="margin-bottom:14px;">
+          <div class="card card-accent-top card-jade"><div class="card-eyebrow">Steps</div><div class="card-value jade" style="font-size:30px;" id="hs-steps">—</div><div class="card-sub">goal: 10,000</div></div>
+          <div class="card card-accent-top card-sky"><div class="card-eyebrow">Sleep</div><div class="card-value sky" style="font-size:30px;" id="hs-sleep">—</div><div class="card-sub">goal: 7–9h</div></div>
+          <div class="card card-accent-top card-violet"><div class="card-eyebrow">Water</div><div class="card-value violet" style="font-size:30px;" id="hs-water">—</div><div class="card-sub">goal: 2.5L</div></div>
+          <div class="card card-accent-top card-ember"><div class="card-eyebrow">Energy</div><div class="card-value ember" style="font-size:30px;" id="hs-energy">—</div><div class="card-sub">scale 1–10</div></div>
+        </div>
+        <div class="card">
+          <div class="card-eyebrow" style="margin-bottom:14px;">Log History <span style="color:var(--fog);font-size:8px;">— hover row to edit</span></div>
+          <div id="health-log"></div>
+        </div>
+      </div>
+
+      <!-- ══════ JOURNAL ══════ -->
+      <div class="page" id="page-journal">
+        <div class="section-head">
+          <div><div class="section-title">Journal</div><div class="section-sub">Clarity is the weapon. Write daily.</div></div>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('journal-panel')">+ New Entry</button>
+        </div>
+        <div class="form-panel" id="journal-panel">
+          <div class="g2">
+            <div class="field"><label>Date</label><input class="input" id="j-date" type="date"></div>
+            <div class="field"><label>Mood</label>
+              <select class="input" id="j-mood"><option value="🔥">🔥 Fired up</option><option value="😄">😄 Great</option><option value="😊">😊 Good</option><option value="😐">😐 Meh</option><option value="😤">😤 Frustrated</option><option value="😴">😴 Drained</option><option value="😰">😰 Stressed</option></select>
+            </div>
+            <div class="field"><label>Energy (1-10)</label><input class="input" id="j-energy" type="number" min="1" max="10" placeholder="7"></div>
+            <div class="field"><label>Title</label><input class="input" id="j-title" placeholder="What defined today?"></div>
+          </div>
+          <div class="field" style="margin-top:10px;"><label>Entry</label><textarea class="input" id="j-text" rows="5" placeholder="Write freely — wins, struggles, ideas, learnings…"></textarea></div>
+          <div class="field" style="margin-top:10px;"><label>Gratitude (comma-separated)</label><input class="input" id="j-gratitude" placeholder="e.g. good coffee, clear focus, a kind message"></div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="addJournalEntry()">Save Entry</button>
+            <button class="btn" onclick="closePanel('journal-panel')">Cancel</button>
+          </div>
+        </div>
+        <div id="journal-entries"></div>
+      </div>
+
+      <!-- ══════ GOALS ══════ -->
+      <div class="page" id="page-goals">
+        <div class="section-head">
+          <div><div class="section-title">Goals</div><div class="section-sub">Long-term vision. Short-term action.</div></div>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('goal-panel')">+ New Goal</button>
+        </div>
+        <div class="form-panel" id="goal-panel">
+          <div class="g2">
+            <div class="field"><label>Goal Title</label><input class="input" id="g-title" placeholder="e.g. Launch SaaS product"></div>
+            <div class="field"><label>Area</label>
+              <select class="input" id="g-area"><option value="career">Career</option><option value="health">Health</option><option value="finance">Finance</option><option value="learning">Learning</option><option value="personal">Personal</option><option value="relationships">Relationships</option></select>
+            </div>
+            <div class="field"><label>Target Date</label><input class="input" id="g-target" type="date"></div>
+            <div class="field"><label>Success Metric</label><input class="input" id="g-metric" placeholder="e.g. 100 paying users"></div>
+            <div class="field"><label>Why (your reason)</label><input class="input" id="g-why" placeholder="e.g. Financial freedom for my family"></div>
+            <div class="field"><label>Progress (%)</label><input class="input" id="g-pct" type="number" min="0" max="100" placeholder="0"></div>
+          </div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="addGoal()">Save Goal</button>
+            <button class="btn" onclick="closePanel('goal-panel')">Cancel</button>
+          </div>
+        </div>
+        <div class="g2">
+          <div><div style="font-size:9px;letter-spacing:2px;color:var(--fog);text-transform:uppercase;margin-bottom:12px;">Active</div><div id="goals-active"></div></div>
+          <div><div style="font-size:9px;letter-spacing:2px;color:var(--fog);text-transform:uppercase;margin-bottom:12px;">Completed</div><div id="goals-done"></div></div>
+        </div>
+      </div>
+
+      <!-- ══════ PROJECTS ══════ -->
+      <div class="page" id="page-projects">
+        <div class="section-head">
+          <div><div class="section-title">Projects</div><div class="section-sub">Build things that matter. Ship relentlessly.</div></div>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('proj-panel')">+ New Project</button>
+        </div>
+        <div class="form-panel" id="proj-panel">
+          <div class="g2">
+            <div class="field"><label>Project Name</label><input class="input" id="p-name" placeholder="e.g. WhatsApp Bot"></div>
+            <div class="field"><label>Status</label>
+              <select class="input" id="p-status"><option value="active">Active</option><option value="planning">Planning</option><option value="paused">Paused</option><option value="done">Done</option></select>
+            </div>
+            <div class="field"><label>Due Date</label><input class="input" id="p-due" type="date"></div>
+            <div class="field"><label>Progress (%)</label><input class="input" id="p-pct" type="number" min="0" max="100" placeholder="0"></div>
+          </div>
+          <div class="field" style="margin-top:10px;"><label>Description / Objective</label><textarea class="input" id="p-desc" rows="2" placeholder="What does done look like?"></textarea></div>
+          <div class="field" style="margin-top:10px;"><label>Next Action</label><input class="input" id="p-next" placeholder="The single next step"></div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="addProject()">Save Project</button>
+            <button class="btn" onclick="closePanel('proj-panel')">Cancel</button>
+          </div>
+        </div>
+        <div class="g-auto" id="projects-list"></div>
+      </div>
+
+      <!-- ══════ FINANCE ══════ -->
+      <div class="page" id="page-finance">
+        <div class="section-head">
+          <div><div class="section-title">Finance</div><div class="section-sub">Know every dollar. Control the flow.</div></div>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('finance-panel')">+ Transaction</button>
+        </div>
+        <div class="form-panel" id="finance-panel">
+          <div class="g2">
+            <div class="field"><label>Description</label><input class="input" id="f-name" placeholder="e.g. Rent payment"></div>
+            <div class="field"><label>Amount</label><input class="input" id="f-amount" type="number" placeholder="0.00"></div>
+            <div class="field"><label>Type</label>
+              <select class="input" id="f-type"><option value="expense">Expense</option><option value="income">Income</option><option value="saving">Saving</option><option value="investment">Investment</option></select>
+            </div>
+            <div class="field"><label>Category</label>
+              <select class="input" id="f-cat"><option value="housing">Housing</option><option value="food">Food</option><option value="transport">Transport</option><option value="tech">Tech</option><option value="health">Health</option><option value="entertainment">Entertainment</option><option value="salary">Salary</option><option value="freelance">Freelance</option><option value="investment">Investment</option><option value="other">Other</option></select>
+            </div>
+            <div class="field"><label>Date</label><input class="input" id="f-date" type="date"></div>
+            <div class="field"><label>Notes</label><input class="input" id="f-notes" placeholder="optional"></div>
+          </div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="addTransaction()">Save</button>
+            <button class="btn" onclick="closePanel('finance-panel')">Cancel</button>
+          </div>
+        </div>
+        <div class="g4" style="margin-bottom:14px;">
+          <div class="card card-accent-top card-jade"><div class="card-eyebrow">Income</div><div class="card-value jade" style="font-size:26px;" id="f-income">$0</div></div>
+          <div class="card card-accent-top card-ember"><div class="card-eyebrow">Expenses</div><div class="card-value ember" style="font-size:26px;" id="f-expenses">$0</div></div>
+          <div class="card card-accent-top card-gold"><div class="card-eyebrow">Savings</div><div class="card-value gold" style="font-size:26px;" id="f-savings">$0</div></div>
+          <div class="card card-accent-top card-sky"><div class="card-eyebrow">Save Rate</div><div class="card-value sky" style="font-size:26px;" id="f-rate">0%</div></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="card-eyebrow" style="margin-bottom:14px;">All Transactions <span style="color:var(--fog);font-size:8px;">— hover to edit</span></div><div id="tx-list"></div></div>
+          <div class="card"><div class="card-eyebrow" style="margin-bottom:14px;">Spending Breakdown</div><div id="f-breakdown"></div></div>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </main>
+</div><!-- /app -->
+
+<!-- ══════════════ EDIT MODAL ══════════════ -->
+<div class="modal-backdrop" id="editModal" onclick="handleModalBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Edit</div>
+      <button class="modal-close" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="modalDelete()">🗑 Delete</button>
+      <button class="btn btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="modalSave()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  LIFE OS — Core Engine
+//  Backend: GitHub Gist API (private gist)
+// ═══════════════════════════════════════════════════
+
+const GIST_DESC = 'life-os-data-v1';
+const SYNC_DEBOUNCE = 2500;
+
+let PAT = localStorage.getItem('los-pat') || '';
+let GIST_ID = localStorage.getItem('los-gist-id') || '';
+let syncTimer = null;
+let syncStatus = 'idle'; // idle | syncing | ok | err
+
+// ─── Default data shape ───
+function defaultData() {
+  return {
+    tasks: [], habits: [], health: [],
+    transactions: [], goals: [], projects: [],
+    journal: [], focusSessions: [],
+    meta: { created: today(), lastSync: null }
+  };
+}
+
+let D = defaultData();
+
+// ─── Helpers ───
+const today = () => new Date().toISOString().slice(0,10);
+const now = () => new Date().toISOString();
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtDate = d => d ? new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}) : '—';
+const uid = () => Date.now() + Math.random().toString(36).slice(2,7);
+
+// ─── Sync bar ───
+function showSyncBar(on) { document.getElementById('sync-bar').classList.toggle('active', on); }
+
+function setSyncStatus(s, msg) {
+  syncStatus = s;
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (!dot) return;
+  dot.className = 'sync-dot' + (s==='ok'?' ok':s==='err'?' err':s==='syncing'?' syncing':'');
+  label.textContent = msg;
+  showSyncBar(s === 'syncing');
+}
+
+// ═══════════════════════════════════════════════════
+//  GITHUB GIST API
+// ═══════════════════════════════════════════════════
+async function gistGet(id) {
+  const r = await fetch(`https://api.github.com/gists/${id}`, {
+    headers: { Authorization: `token ${PAT}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!r.ok) throw new Error(`Gist GET failed: ${r.status}`);
+  return r.json();
+}
+
+async function gistPatch(id, content) {
+  const r = await fetch(`https://api.github.com/gists/${id}`, {
+    method: 'PATCH',
+    headers: { Authorization: `token ${PAT}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ files: { 'life-os.json': { content } } })
+  });
+  if (!r.ok) throw new Error(`Gist PATCH failed: ${r.status}`);
+  return r.json();
+}
+
+async function gistCreate() {
+  const r = await fetch('https://api.github.com/gists', {
+    method: 'POST',
+    headers: { Authorization: `token ${PAT}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      description: GIST_DESC, public: false,
+      files: { 'life-os.json': { content: JSON.stringify(defaultData(), null, 2) } }
+    })
+  });
+  if (!r.ok) throw new Error(`Gist CREATE failed: ${r.status}`);
+  return r.json();
+}
+
+async function listGists() {
+  const r = await fetch('https://api.github.com/gists?per_page=50', {
+    headers: { Authorization: `token ${PAT}` }
+  });
+  if (!r.ok) throw new Error(`List gists failed: ${r.status}`);
+  return r.json();
+}
+
+// ─── Find or create the data gist ───
+async function findOrCreateGist() {
+  if (GIST_ID) {
+    // Verify it still exists
+    try { await gistGet(GIST_ID); return GIST_ID; } catch(e) { GIST_ID = ''; }
+  }
+  const list = await listGists();
+  const existing = list.find(g => g.description === GIST_DESC);
+  if (existing) { GIST_ID = existing.id; localStorage.setItem('los-gist-id', GIST_ID); return GIST_ID; }
+  const created = await gistCreate();
+  GIST_ID = created.id;
+  localStorage.setItem('los-gist-id', GIST_ID);
+  return GIST_ID;
+}
+
+// ─── Pull from Gist ───
+async function pullData() {
+  const g = await gistGet(GIST_ID);
+  const raw = g.files['life-os.json']?.content || '{}';
+  const remote = JSON.parse(raw);
+  // Merge — remote wins
+  D = Object.assign(defaultData(), remote);
+}
+
+// ─── Push to Gist ───
+async function pushData() {
+  D.meta.lastSync = now();
+  await gistPatch(GIST_ID, JSON.stringify(D, null, 2));
+}
+
+// ─── Scheduled auto-sync ───
+function scheduleSave() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncNow('push'), SYNC_DEBOUNCE);
+}
+
+async function syncNow(mode = 'both') {
+  setSyncStatus('syncing', 'Syncing…');
+  try {
+    if (!GIST_ID) await findOrCreateGist();
+    if (mode === 'pull' || mode === 'both') await pullData();
+    if (mode === 'push' || mode === 'both') await pushData();
+    setSyncStatus('ok', `Synced ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`);
+    renderAll();
+  } catch(e) {
+    setSyncStatus('err', 'Sync failed — ' + e.message);
+    console.error(e);
+  }
+}
+
+async function manualSync() { await syncNow('both'); }
+
+// ─── Init with PAT ───
+async function initWithPAT() {
+  const token = document.getElementById('pat-input').value.trim();
+  const errEl = document.getElementById('pat-error');
+  errEl.style.display = 'none';
+  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+    errEl.textContent = 'Token should start with ghp_ or github_pat_. Please check and retry.';
+    errEl.style.display = 'block'; return;
+  }
+  PAT = token; localStorage.setItem('los-pat', PAT);
+  setSyncStatus('syncing', 'Connecting…');
+  document.querySelector('#setup-screen .btn-gold').textContent = 'Connecting…';
+  try {
+    await findOrCreateGist();
+    await pullData();
+    await pushData();
+    launchApp();
+  } catch(e) {
+    errEl.textContent = 'Connection failed: ' + e.message + '. Check your token has gist scope.';
+    errEl.style.display = 'block';
+    document.querySelector('#setup-screen .btn-gold').textContent = 'Connect & Launch →';
+    setSyncStatus('err', 'Failed');
+  }
+}
+
+function launchApp() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  setSyncStatus('ok', 'Connected');
+  updateTopbar();
+  setInterval(updateTopbar, 30000);
+  setInterval(() => syncNow('pull'), 60000); // auto-pull every 60s
+  renderAll();
+  seedIfEmpty();
+}
+
+// ─── Boot ───
+window.addEventListener('DOMContentLoaded', () => {
+  if (PAT) {
+    setSyncStatus('syncing', 'Loading your data…');
+    findOrCreateGist().then(pullData).then(() => {
+      launchApp();
+    }).catch(e => {
+      // If auto-login fails, show setup again
+      document.getElementById('setup-screen').style.display = 'flex';
+      console.error(e);
+    });
+  } else {
+    document.getElementById('setup-screen').style.display = 'flex';
+  }
+  updateTopbar();
+});
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+const PAGE_TITLES = {
+  overview:'Overview', tasks:'Tasks', habits:'Habits', focus:'Focus',
+  health:'Health', journal:'Journal', goals:'Goals', projects:'Projects', finance:'Finance'
+};
+
+function goTo(page, el) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[page];
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  renderAll();
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('mobile-open'); }
+
+function updateTopbar() {
+  document.getElementById('topbar-date').textContent =
+    new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+// ═══════════════════════════════════════════════════
+//  PANELS & MODAL
+// ═══════════════════════════════════════════════════
+function openPanel(id) { document.getElementById(id).classList.add('open'); }
+function closePanel(id) { document.getElementById(id).classList.remove('open'); }
+
+let modalCtx = null;
+function openModal(title, html, ctx) {
+  modalCtx = ctx;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal() { document.getElementById('editModal').classList.remove('open'); modalCtx = null; }
+function handleModalBg(e) { if (e.target === e.currentTarget) closeModal(); }
+
+const mv = id => document.getElementById('m-'+id)?.value ?? '';
+const mc = id => document.getElementById('m-'+id)?.checked ?? false;
+
+function mf(id,label,val,type='text',extra='') {
+  return `<div class="modal-field"><label>${label}</label><input class="input" id="m-${id}" type="${type}" value="${esc(val??'')}" ${extra}></div>`;
+}
+function ms(id,label,opts,cur) {
+  return `<div class="modal-field"><label>${label}</label><select class="input" id="m-${id}">${opts.map(([v,l])=>`<option value="${v}"${cur===v?' selected':''}>${l}</option>`).join('')}</select></div>`;
+}
+function mta(id,label,val) {
+  return `<div class="modal-field"><label>${label}</label><textarea class="input" id="m-${id}" rows="4">${esc(val??'')}</textarea></div>`;
+}
+function mck(id,label,checked) {
+  return `<div class="modal-field"><div class="checkbox-row"><input type="checkbox" id="m-${id}" ${checked?'checked':''}><label for="m-${id}">${label}</label></div></div>`;
+}
+
+function modalSave() {
+  if (!modalCtx) return;
+  const {type, id} = modalCtx;
+  ({
+    task:    () => { const t=find('tasks',id); if(!t)return; t.text=mv('text');t.area=mv('area');t.prio=mv('prio');t.bucket=mv('bucket');t.due=mv('due');t.notes=mv('notes');t.done=mc('done'); },
+    habit:   () => { const h=find('habits',id); if(!h)return; h.name=mv('name');h.freq=mv('freq');h.cat=mv('cat');h.time=mv('time');h.streak=parseInt(mv('streak'))||0; },
+    health:  () => { const e=find('health',id); if(!e)return; e.date=mv('date');e.steps=mv('steps');e.sleep=mv('sleep');e.water=mv('water');e.calories=mv('cal');e.energy=mv('energy');e.weight=mv('weight');e.notes=mv('notes'); },
+    tx:      () => { const t=find('transactions',id); if(!t)return; t.name=mv('name');t.amount=parseFloat(mv('amount'))||0;t.type=mv('type');t.cat=mv('cat');t.date=mv('date');t.notes=mv('notes'); },
+    goal:    () => { const g=find('goals',id); if(!g)return; g.title=mv('title');g.area=mv('area');g.target=mv('target');g.metric=mv('metric');g.why=mv('why');g.progress=Math.min(100,Math.max(0,parseInt(mv('pct'))||0));g.done=mc('done'); },
+    project: () => { const p=find('projects',id); if(!p)return; p.name=mv('name');p.status=mv('status');p.due=mv('due');p.desc=mv('desc');p.pct=Math.min(100,Math.max(0,parseInt(mv('pct'))||0));p.next=mv('next'); },
+    journal: () => { const e=find('journal',id); if(!e)return; e.date=mv('date');e.mood=mv('mood');e.energy=mv('energy');e.title=mv('title');e.text=mv('text');e.gratitude=mv('gratitude'); },
+    focus:   () => { const s=find('focusSessions',id); if(!s)return; s.task=mv('task');s.duration=parseInt(mv('dur'))||0;s.date=mv('date'); },
+  })[type]?.();
+  closeModal(); scheduleSave(); renderAll();
+}
+
+function modalDelete() {
+  if (!modalCtx || !confirm('Delete this item permanently?')) return;
+  const colMap = {task:'tasks',habit:'habits',health:'health',tx:'transactions',goal:'goals',project:'projects',journal:'journal',focus:'focusSessions'};
+  const col = colMap[modalCtx.type];
+  if (col) D[col] = D[col].filter(x=>x.id!==modalCtx.id);
+  closeModal(); scheduleSave(); renderAll();
+}
+
+// ─── Edit openers ───
+function editTask(id) {
+  const t=find('tasks',id); if(!t)return;
+  openModal('Edit Task',
+    mf('text','Task',t.text)+ms('area','Area',[['work','Work'],['personal','Personal'],['health','Health'],['finance','Finance'],['tech','Tech'],['social','Social']],t.area)+ms('prio','Priority',[['high','High'],['med','Medium'],['low','Low']],t.prio)+ms('bucket','Bucket',[['today','Today'],['upcoming','Upcoming'],['backlog','Backlog']],t.bucket)+mf('due','Due Date',t.due,'date')+mf('notes','Notes',t.notes)+mck('done','Mark as done',t.done),{type:'task',id});
+}
+function editHabit(id) {
+  const h=find('habits',id); if(!h)return;
+  openModal('Edit Habit',mf('name','Name',h.name)+ms('freq','Frequency',[['daily','Daily'],['weekdays','Weekdays'],['weekly','Weekly']],h.freq)+ms('cat','Category',[['health','Health'],['mind','Mind'],['work','Work'],['social','Social']],h.cat)+mf('time','Target Time',h.time)+mf('streak','Current Streak',h.streak,'number'),{type:'habit',id});
+}
+function editHealth(id) {
+  const e=find('health',id); if(!e)return;
+  openModal('Edit Health Entry',mf('date','Date',e.date,'date')+mf('steps','Steps',e.steps)+mf('sleep','Sleep (hrs)',e.sleep)+mf('water','Water (L)',e.water)+mf('cal','Calories',e.calories)+mf('energy','Energy (1-10)',e.energy,'number')+mf('weight','Weight (kg)',e.weight)+mf('notes','Notes',e.notes),{type:'health',id});
+}
+function editTx(id) {
+  const t=find('transactions',id); if(!t)return;
+  openModal('Edit Transaction',mf('name','Description',t.name)+mf('amount','Amount',t.amount,'number')+ms('type','Type',[['expense','Expense'],['income','Income'],['saving','Saving'],['investment','Investment']],t.type)+ms('cat','Category',[['housing','Housing'],['food','Food'],['transport','Transport'],['tech','Tech'],['health','Health'],['entertainment','Entertainment'],['salary','Salary'],['freelance','Freelance'],['investment','Investment'],['other','Other']],t.cat)+mf('date','Date',t.date,'date')+mf('notes','Notes',t.notes),{type:'tx',id});
+}
+function editGoal(id) {
+  const g=find('goals',id); if(!g)return;
+  openModal('Edit Goal',mf('title','Title',g.title)+ms('area','Area',[['career','Career'],['health','Health'],['finance','Finance'],['learning','Learning'],['personal','Personal'],['relationships','Relationships']],g.area)+mf('target','Target Date',g.target,'date')+mf('metric','Success Metric',g.metric)+mf('why','Why',g.why)+mf('pct','Progress (%)',g.progress,'number')+mck('done','Mark as completed',g.done),{type:'goal',id});
+}
+function editProject(id) {
+  const p=find('projects',id); if(!p)return;
+  openModal('Edit Project',mf('name','Name',p.name)+ms('status','Status',[['active','Active'],['planning','Planning'],['paused','Paused'],['done','Done']],p.status)+mf('due','Due Date',p.due,'date')+mf('pct','Progress (%)',p.pct,'number')+mta('desc','Description',p.desc)+mf('next','Next Action',p.next),{type:'project',id});
+}
+function editJournal(id) {
+  const e=find('journal',id); if(!e)return;
+  openModal('Edit Journal Entry',mf('date','Date',e.date,'date')+ms('mood','Mood',[['🔥','🔥 Fired up'],['😄','😄 Great'],['😊','😊 Good'],['😐','😐 Meh'],['😤','😤 Frustrated'],['😴','😴 Drained'],['😰','😰 Stressed']],e.mood)+mf('energy','Energy (1-10)',e.energy,'number')+mf('title','Title',e.title)+mta('text','Entry',e.text)+mf('gratitude','Gratitude',e.gratitude),{type:'journal',id});
+}
+function editFocus(id) {
+  const s=find('focusSessions',id); if(!s)return;
+  openModal('Edit Session',mf('task','Task',s.task)+mf('dur','Duration (min)',s.duration,'number')+mf('date','Date',s.date,'date'),{type:'focus',id});
+}
+
+// ═══════════════════════════════════════════════════
+//  DATA HELPERS
+// ═══════════════════════════════════════════════════
+function find(col, id) { return D[col]?.find(x=>x.id===id); }
+function add(col, item) { D[col].push(item); scheduleSave(); renderAll(); }
+
+// ─── Add functions ───
+function addTask() {
+  const text=document.getElementById('t-text').value.trim(); if(!text)return;
+  add('tasks',{id:uid(),text,area:document.getElementById('t-area').value,prio:document.getElementById('t-prio').value,bucket:document.getElementById('t-bucket').value,due:document.getElementById('t-due').value,notes:document.getElementById('t-notes').value,done:false,created:now()});
+  document.getElementById('t-text').value=''; closePanel('task-panel');
+}
+function addHabit() {
+  const name=document.getElementById('h-name').value.trim(); if(!name)return;
+  add('habits',{id:uid(),name,freq:document.getElementById('h-freq').value,cat:document.getElementById('h-cat').value,time:document.getElementById('h-time').value||'08:00',streak:0,log:{},created:now()});
+  document.getElementById('h-name').value=''; closePanel('habit-panel');
+}
+function saveHealthEntry() {
+  add('health',{id:uid(),date:document.getElementById('he-date').value||today(),steps:document.getElementById('he-steps').value,sleep:document.getElementById('he-sleep').value,water:document.getElementById('he-water').value,calories:document.getElementById('he-cal').value,energy:document.getElementById('he-energy').value,weight:document.getElementById('he-weight').value,notes:document.getElementById('he-notes').value,created:now()});
+  ['he-steps','he-sleep','he-water','he-cal','he-energy','he-weight','he-notes'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('he-date').value=today();
+  closePanel('health-panel');
+}
+function addJournalEntry() {
+  const text=document.getElementById('j-text').value.trim(); if(!text)return;
+  add('journal',{id:uid(),date:document.getElementById('j-date').value||today(),mood:document.getElementById('j-mood').value,energy:document.getElementById('j-energy').value,title:document.getElementById('j-title').value||'Untitled',text,gratitude:document.getElementById('j-gratitude').value,created:now()});
+  ['j-text','j-title','j-gratitude','j-energy'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('j-date').value=today();
+  closePanel('journal-panel');
+}
+function addGoal() {
+  const title=document.getElementById('g-title').value.trim(); if(!title)return;
+  add('goals',{id:uid(),title,area:document.getElementById('g-area').value,target:document.getElementById('g-target').value,metric:document.getElementById('g-metric').value,why:document.getElementById('g-why').value,progress:parseInt(document.getElementById('g-pct').value)||0,done:false,created:now()});
+  document.getElementById('g-title').value=''; closePanel('goal-panel');
+}
+function addProject() {
+  const name=document.getElementById('p-name').value.trim(); if(!name)return;
+  add('projects',{id:uid(),name,status:document.getElementById('p-status').value,due:document.getElementById('p-due').value,pct:parseInt(document.getElementById('p-pct').value)||0,desc:document.getElementById('p-desc').value,next:document.getElementById('p-next').value,created:now()});
+  document.getElementById('p-name').value=''; closePanel('proj-panel');
+}
+function addTransaction() {
+  const name=document.getElementById('f-name').value.trim();
+  const amount=parseFloat(document.getElementById('f-amount').value);
+  if(!name||!amount)return;
+  add('transactions',{id:uid(),name,amount,type:document.getElementById('f-type').value,cat:document.getElementById('f-cat').value,date:document.getElementById('f-date').value||today(),notes:document.getElementById('f-notes').value,created:now()});
+  document.getElementById('f-name').value=''; document.getElementById('f-amount').value='';
+  closePanel('finance-panel');
+}
+
+function toggleTask(id) {
+  const t=find('tasks',id); if(!t)return; t.done=!t.done; scheduleSave(); renderAll();
+}
+function toggleHabit(id) {
+  const h=find('habits',id); if(!h)return;
+  if(h.log[today()]){delete h.log[today()];h.streak=Math.max(0,h.streak-1);}
+  else{h.log[today()]=true;h.streak=(h.streak||0)+1;}
+  scheduleSave(); renderAll();
+}
+function markGoalDone(id) {
+  const g=find('goals',id); if(!g)return; g.done=true;g.progress=100; scheduleSave(); renderAll();
+}
+
+// ─── Quick Add ───
+function quickAdd() {
+  const text = prompt('Quick task:'); if(!text?.trim())return;
+  add('tasks',{id:uid(),text:text.trim(),area:'personal',prio:'med',bucket:'today',due:today(),notes:'',done:false,created:now()});
+}
+
+// ─── Settings ───
+function showSettings() {
+  openModal('Settings',
+    `<div class="modal-field"><label>GitHub PAT (stored locally only)</label><input class="input" id="m-pat" type="password" value="${esc(PAT)}" placeholder="ghp_…"></div>
+     <div class="modal-field"><label>Gist ID (auto-detected)</label><input class="input" id="m-gid" value="${esc(GIST_ID)}" placeholder="will be created automatically"></div>
+     <div class="modal-field" style="margin-top:16px;">
+       <button class="btn btn-danger" style="width:100%;" onclick="if(confirm('Reset ALL local data and settings?')){localStorage.clear();location.reload();}">⚠ Reset Everything</button>
+     </div>`,
+    {type:'settings',id:null}
+  );
+  // Override save for settings
+  document.querySelector('.modal-actions .btn-gold').onclick = () => {
+    PAT = document.getElementById('m-pat').value.trim();
+    GIST_ID = document.getElementById('m-gid').value.trim();
+    localStorage.setItem('los-pat', PAT);
+    localStorage.setItem('los-gist-id', GIST_ID);
+    closeModal(); manualSync();
+  };
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER ENGINE
+// ═══════════════════════════════════════════════════
+const catColor = {work:'gold',personal:'jade',health:'jade',finance:'sky',tech:'violet',social:'ember',other:'silver'};
+const catIcon = {housing:'🏠',food:'🍔',transport:'🚗',tech:'💻',health:'💊',entertainment:'🎮',salary:'💰',freelance:'🧑‍💻',investment:'📈',other:'📦'};
+const prioColor = {high:'ember',med:'gold',low:'jade'};
+const statusColor = {active:'jade',planning:'sky',paused:'gold',done:'violet'};
+
+function el(id,html) { const e=document.getElementById(id); if(e)e.innerHTML=html; }
+function empty(msg='Nothing here yet.') { return `<div class="empty"><div class="empty-icon">○</div>${msg}</div>`; }
+
+function taskHTML(t) {
+  return `<div class="row-item">
+    <div class="check-box ${t.done?'checked':''}" onclick="toggleTask('${t.id}')"></div>
+    <div class="prio-dot p-${t.prio}"></div>
+    <div style="flex:1;">
+      <div style="font-size:12px;color:${t.done?'var(--fog)':'var(--paper)'};${t.done?'text-decoration:line-through;':''}">${esc(t.text)}</div>
+      ${t.notes?`<div style="font-size:9px;color:var(--fog);margin-top:1px;">${esc(t.notes)}</div>`:''}
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+      ${t.due?`<span style="font-size:9px;color:var(--fog)">${fmtDate(t.due)}</span>`:''}
+      <span class="chip chip-${catColor[t.area]||'gold'}">${t.area}</span>
+      <div class="row-actions"><button class="btn-edit" onclick="editTask('${t.id}')">✎</button></div>
+    </div>
+  </div>`;
+}
+
+// ─── OVERVIEW ───
+function renderOverview() {
+  const todayTasks = D.tasks.filter(t=>t.bucket==='today');
+  const doneTasks = todayTasks.filter(t=>t.done);
+  el('ov-tasks',`${doneTasks.length}/${todayTasks.length}`);
+  el('ov-tasks-sub',`${todayTasks.length-doneTasks.length} remaining`);
+
+  const streak = D.habits.length ? Math.max(...D.habits.map(h=>h.streak||0)) : 0;
+  el('ov-streak', streak+'<span style="font-size:18px;color:var(--fog)">d</span>');
+
+  const inc = D.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+Number(b.amount),0);
+  const exp = D.transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+Number(b.amount),0);
+  el('ov-net', `$${(inc-exp).toLocaleString()}`);
+
+  const lastH = D.health[D.health.length-1];
+  el('ov-energy', lastH?.energy ? lastH.energy+`<span style="font-size:18px;color:var(--fog)">/10</span>` : '—');
+
+  // Balance bars
+  const domains = [['Health','var(--jade)',72],['Work','var(--gold)',88],['Finance','var(--sky)',65],['Social','var(--ember)',50],['Growth','var(--violet)',80],['Fun','#e87cb8',40]];
+  el('ov-balance', domains.map(([l,c,v])=>`
+    <div class="prog-wrap">
+      <div class="prog-header"><span>${l}</span><span>${v}%</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${v}%;background:${c}"></div></div>
+    </div>`).join(''));
+
+  // Sparkline
+  const vals=[3,5,4,7,6,8,5,9,7,6,8,7,9,doneTasks.length||1];
+  const mx=Math.max(...vals);
+  el('ov-sparkline',vals.map((v,i)=>`<div class="sp-bar ${i===vals.length-1?'hi':''}" style="height:${Math.max(6,(v/mx)*100)}%;"></div>`).join(''));
+
+  // Priorities
+  const prios = D.tasks.filter(t=>!t.done&&t.prio==='high').slice(0,5);
+  el('ov-priorities', prios.length ? prios.map(taskHTML).join('') : empty('No high-priority tasks. Nice! 🎉'));
+
+  // Goals snapshot
+  const activeGoals = D.goals.filter(g=>!g.done).slice(0,4);
+  el('ov-goals', activeGoals.length ? activeGoals.map(g=>`
+    <div class="prog-wrap">
+      <div class="prog-header">
+        <span style="font-size:11px;color:var(--silver)">${esc(g.title)}</span>
+        <span style="color:var(--gold)">${g.progress}%</span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" style="width:${g.progress}%"></div></div>
+    </div>`).join('') : empty('No goals set yet.'));
+
+  // Mood
+  const moods = D.journal.slice(-7);
+  const days=['M','T','W','T','F','S','S'];
+  el('ov-mood', days.map((d,i)=>{
+    const m=moods[i];
+    return `<div style="text-align:center;flex:1;"><div style="font-size:20px;">${m?.mood||'·'}</div><div style="font-size:8px;color:var(--fog);margin-top:3px;">${d}</div></div>`;
+  }).join(''));
+
+  // Badge
+  el('badge-tasks', D.tasks.filter(t=>t.bucket==='today'&&!t.done).length||'');
+  document.getElementById('badge-tasks').style.display = D.tasks.filter(t=>t.bucket==='today'&&!t.done).length?'':'none';
+
+  // Life score
+  const taskScore = todayTasks.length ? Math.round(doneTasks.length/todayTasks.length*100) : 100;
+  const habitScore = D.habits.length ? Math.round(D.habits.filter(h=>h.log[today()]).length/D.habits.length*100) : 100;
+  const goalScore = D.goals.length ? Math.round(D.goals.filter(g=>g.done).length/D.goals.length*100) : 100;
+  const energyScore = lastH?.energy ? lastH.energy*10 : 70;
+  const lifeScore = Math.round((taskScore+habitScore+goalScore+energyScore)/4);
+  el('life-score', lifeScore);
+  el('score-bars',`
+    <div class="score-bar-row"><div class="score-bar-label">Tasks</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${taskScore}%;background:var(--gold)"></div></div></div>
+    <div class="score-bar-row"><div class="score-bar-label">Habits</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${habitScore}%;background:var(--jade)"></div></div></div>
+    <div class="score-bar-row"><div class="score-bar-label">Goals</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${goalScore}%;background:var(--sky)"></div></div></div>
+    <div class="score-bar-row"><div class="score-bar-label">Energy</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${energyScore}%;background:var(--ember)"></div></div></div>
+  `);
+}
+
+// ─── TASKS ───
+function renderTasks() {
+  ['today','upcoming','backlog'].forEach(b=>{
+    const items=D.tasks.filter(t=>t.bucket===b&&!t.done);
+    el('tasks-'+b, items.length?items.map(taskHTML).join(''):empty());
+  });
+  const done=D.tasks.filter(t=>t.done);
+  el('tasks-done', done.length?done.map(taskHTML).join(''):empty());
+  el('t-today-ct', D.tasks.filter(t=>t.bucket==='today'&&!t.done).length);
+  el('t-done-ct', done.length);
+}
+
+// ─── HABITS ───
+function renderHabits() {
+  el('habits-checkin', D.habits.length ? D.habits.map(h=>{
+    const done=h.log&&h.log[today()];
+    return `<div class="row-item">
+      <div class="check-box ${done?'checked':''}" onclick="toggleHabit('${h.id}')"></div>
+      <div style="flex:1;">
+        <div style="font-size:12px;color:var(--paper)">${esc(h.name)}</div>
+        <div style="font-size:9px;color:var(--fog)">${h.time||''} · ${h.cat} · ${h.freq}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="week-dots">${Array(7).fill(0).map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return `<div class="wd ${(h.log&&h.log[d.toISOString().slice(0,10)])?'on':''}"></div>`;}).join('')}</div>
+        <span style="font-family:var(--r-serif);font-size:14px;color:var(--gold)">🔥${h.streak||0}</span>
+        <div class="row-actions"><button class="btn-edit" onclick="editHabit('${h.id}')">✎</button></div>
+      </div>
+    </div>`;
+  }).join('') : empty('No habits yet. Add your first one above.'));
+
+  // Heatmap
+  const cells=Array(28).fill(0).map((_,i)=>{
+    const s=Math.floor(Math.random()*5); return `<div class="hm-cell hm-${s}" title="Day ${i+1}"></div>`;
+  }).join('');
+  el('habit-heatmap',cells);
+
+  // Analytics
+  el('habit-analytics', D.habits.length ? D.habits.map(h=>{
+    const rate=Math.max(10,Math.min(100,(h.streak||0)*5+30));
+    return `<div class="row-item">
+      <div style="flex:1;font-size:12px;color:var(--paper)">${esc(h.name)}</div>
+      <div style="flex:2;padding:0 16px;"><div class="prog-track"><div class="prog-fill" style="width:${rate}%;background:var(--jade)"></div></div></div>
+      <span style="font-size:10px;color:var(--fog);width:30px;text-align:right;">${rate}%</span>
+      <span style="font-family:var(--r-serif);font-size:13px;color:var(--gold);margin-left:10px;">🔥${h.streak||0}</span>
+      <div class="row-actions" style="margin-left:8px;"><button class="btn-edit" onclick="editHabit('${h.id}')">✎</button></div>
+    </div>`;
+  }).join('') : empty('No habits to analyse.'));
+}
+
+// ─── HEALTH ───
+function renderHealth() {
+  const last=D.health[D.health.length-1];
+  el('hs-steps', last?.steps||'—'); el('hs-sleep', last?.sleep?last.sleep+'h':'—');
+  el('hs-water', last?.water?last.water+'L':'—'); el('hs-energy', last?.energy?last.energy+'/10':'—');
+
+  el('health-log', D.health.length ? D.health.slice().reverse().map(e=>`
+    <div class="health-row">
+      <div class="h-date">${fmtDate(e.date)}</div>
+      <div class="h-chips">
+        ${e.steps?`<span class="chip chip-jade">${e.steps} steps</span>`:''}
+        ${e.sleep?`<span class="chip chip-sky">${e.sleep}h sleep</span>`:''}
+        ${e.water?`<span class="chip chip-violet">${e.water}L</span>`:''}
+        ${e.calories?`<span class="chip chip-gold">${e.calories} kcal</span>`:''}
+        ${e.energy?`<span class="chip chip-ember">⚡${e.energy}</span>`:''}
+        ${e.weight?`<span class="chip chip-rose">${e.weight}kg</span>`:''}
+        ${e.notes?`<span style="font-size:10px;color:var(--fog);font-style:italic;">${esc(e.notes)}</span>`:''}
+      </div>
+      <div class="row-actions"><button class="btn-edit" onclick="editHealth('${e.id}')">✎</button></div>
+    </div>`).join('') : empty('No health entries yet. Log your first one above.'));
+}
+
+// ─── FINANCE ───
+function renderFinance() {
+  const inc=D.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+Number(b.amount),0);
+  const exp=D.transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+Number(b.amount),0);
+  const sav=D.transactions.filter(t=>t.type==='saving').reduce((a,b)=>a+Number(b.amount),0);
+  el('f-income',`$${inc.toLocaleString()}`); el('f-expenses',`$${exp.toLocaleString()}`);
+  el('f-savings',`$${sav.toLocaleString()}`); el('f-rate',inc?`${Math.round(sav/inc*100)}%`:'0%');
+
+  el('tx-list', D.transactions.length ? D.transactions.slice().reverse().map(t=>`
+    <div class="row-item">
+      <div class="tx-icon">${catIcon[t.cat]||'📦'}</div>
+      <div class="tx-info">
+        <div class="tx-name">${esc(t.name)}</div>
+        <div class="tx-meta">${t.cat} · ${fmtDate(t.date)}</div>
+      </div>
+      <div class="tx-amount" style="color:${t.type==='expense'?'var(--ember)':t.type==='income'?'var(--jade)':'var(--sky)'}">
+        ${t.type==='expense'?'−':'+'}$${Number(t.amount).toLocaleString()}
+      </div>
+      <div class="row-actions"><button class="btn-edit" onclick="editTx('${t.id}')">✎</button></div>
+    </div>`).join('') : empty('No transactions yet.'));
+
+  const cats={};
+  D.transactions.filter(t=>t.type==='expense').forEach(t=>{cats[t.cat]=(cats[t.cat]||0)+Number(t.amount);});
+  const total=Object.values(cats).reduce((a,b)=>a+b,0)||1;
+  el('f-breakdown', Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,a])=>`
+    <div class="prog-wrap">
+      <div class="prog-header"><span>${catIcon[c]||''} ${c}</span><span>$${a.toLocaleString()}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.round(a/total*100)}%;background:var(--ember)"></div></div>
+    </div>`).join('') || empty('No expenses yet.'));
+}
+
+// ─── GOALS ───
+function renderGoals() {
+  const ac=D.goals.filter(g=>!g.done), dn=D.goals.filter(g=>g.done);
+  const areaColor={career:'gold',health:'jade',finance:'sky',learning:'violet',personal:'ember',relationships:'rose'};
+  el('goals-active', ac.length ? ac.map(g=>`
+    <div class="goal-card">
+      <div class="goal-top">
+        <div>
+          <div class="goal-name">${esc(g.title)}</div>
+          <div style="font-size:9px;color:var(--fog);margin-top:2px;">${esc(g.metric||'')} · Due ${fmtDate(g.target)}</div>
+          ${g.why?`<div style="font-size:9px;color:var(--gold);margin-top:2px;font-style:italic;">${esc(g.why)}</div>`:''}
+        </div>
+        <div style="text-align:right;">
+          <div class="goal-pct">${g.progress}%</div>
+          <span class="chip chip-${areaColor[g.area]||'gold'}">${g.area}</span>
+        </div>
+      </div>
+      <div class="prog-track" style="height:5px;"><div class="prog-fill" style="width:${g.progress}%;height:5px;"></div></div>
+      <div class="row-actions" style="opacity:1;margin-top:10px;">
+        <button class="btn-edit" onclick="editGoal('${g.id}')">✎ Edit</button>
+        <button class="btn-edit" onclick="markGoalDone('${g.id}')">✓ Complete</button>
+      </div>
+    </div>`).join('') : empty('No active goals. Set one above.'));
+
+  el('goals-done', dn.length ? dn.map(g=>`
+    <div class="goal-card" style="opacity:0.55;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="goal-name" style="color:var(--jade)">✅ ${esc(g.title)}</div>
+        <div class="row-actions" style="opacity:1;"><button class="btn-edit" onclick="editGoal('${g.id}')">✎</button></div>
+      </div>
+    </div>`).join('') : empty('Nothing completed yet.'));
+}
+
+// ─── PROJECTS ───
+function renderProjects() {
+  el('projects-list', D.projects.length ? D.projects.map(p=>`
+    <div class="proj-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div>
+          <span class="status-pip" style="background:${p.status==='active'?'var(--jade)':p.status==='planning'?'var(--sky)':p.status==='paused'?'var(--gold)':'var(--violet)'}"></span>
+          <span class="chip chip-${statusColor[p.status]||'gold'}" style="margin-bottom:6px;">${p.status}</span>
+        </div>
+        <div class="row-actions" style="opacity:1;"><button class="btn-edit" onclick="editProject('${p.id}')">✎</button></div>
+      </div>
+      <div class="proj-name">${esc(p.name)}</div>
+      <div class="proj-desc">${esc(p.desc||'')}</div>
+      ${p.next?`<div style="font-size:10px;color:var(--gold);margin-bottom:12px;">→ ${esc(p.next)}</div>`:''}
+      <div class="prog-wrap">
+        <div class="prog-header"><span>Progress</span><span>${p.pct}%</span></div>
+        <div class="prog-track" style="height:5px;"><div class="prog-fill" style="width:${p.pct}%;height:5px;background:var(--jade)"></div></div>
+      </div>
+      ${p.due?`<div style="font-size:9px;color:var(--fog);margin-top:8px;">Due ${fmtDate(p.due)}</div>`:''}
+    </div>`).join('') : empty('No projects yet. Add your first one.'));
+}
+
+// ─── JOURNAL ───
+function renderJournal() {
+  el('journal-entries', D.journal.length ? D.journal.slice().reverse().map(e=>`
+    <div class="journal-entry">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="j-date">${fmtDate(e.date)} — Energy ${e.energy||'?'}/10</div>
+        <div class="row-actions" style="opacity:1;"><button class="btn-edit" onclick="editJournal('${e.id}')">✎</button></div>
+      </div>
+      <div class="j-title">${e.mood||''} ${esc(e.title||'')}</div>
+      <div class="j-text">${esc(e.text||'')}</div>
+      ${e.gratitude?`<div class="j-gratitude">🙏 ${esc(e.gratitude)}</div>`:''}
+    </div>`).join('') : empty('No journal entries yet. Write your first one.'));
+}
+
+// ─── FOCUS ───
+let focusTask=null, timerInterval=null, timerSecs=25*60, timerRunning=false, timerSet=25;
+
+function renderFocus() {
+  el('focus-picker', D.tasks.filter(t=>!t.done).map(t=>`
+    <div class="row-item" style="cursor:pointer;" onclick="setFocusTask('${t.id}',${JSON.stringify(esc(t.text))})">
+      <div class="prio-dot p-${t.prio}"></div>
+      <span style="flex:1;font-size:12px;color:var(--paper)">${esc(t.text)}</span>
+      <span class="chip chip-${catColor[t.area]||'gold'}">${t.area}</span>
+    </div>`).join('') || empty('All tasks done!'));
+
+  const todaySess=D.focusSessions.filter(s=>s.date===today());
+  el('focus-sessions', todaySess.length ? todaySess.map(s=>`
+    <div class="row-item">
+      <span style="flex:1;font-size:11px;color:var(--silver)">${esc(s.task)}</span>
+      <span class="chip chip-gold">${s.duration}m</span>
+      <div class="row-actions" style="margin-left:6px;"><button class="btn-edit" onclick="editFocus('${s.id}')">✎</button></div>
+    </div>`).join('') : empty('No sessions today yet.'));
+
+  el('focus-total', todaySess.reduce((a,b)=>a+(b.duration||0),0)+'m');
+}
+
+function setFocusTask(id, name) {
+  focusTask={id,name};
+  el('focus-task-label', name);
+}
+function setTimer(min){if(timerRunning)return;timerSet=min;timerSecs=min*60;updateTimerDisplay();}
+function updateTimerDisplay(){const m=Math.floor(timerSecs/60),s=timerSecs%60;el('focus-display',`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);}
+function startTimer(){
+  if(timerRunning)return;timerRunning=true;
+  document.getElementById('focus-start').style.display='none';
+  document.getElementById('focus-pause').style.display='';
+  timerInterval=setInterval(()=>{timerSecs--;updateTimerDisplay();if(timerSecs<=0){
+    clearInterval(timerInterval);timerRunning=false;
+    document.getElementById('focus-start').style.display='';
+    document.getElementById('focus-pause').style.display='none';
+    D.focusSessions.push({id:uid(),date:today(),task:focusTask?.name||'Untitled',duration:timerSet,created:now()});
+    scheduleSave();renderFocus();
+    timerSecs=timerSet*60;updateTimerDisplay();
+    new Notification?.('✅ Session complete!',{body:`${timerSet} minutes logged.`});
+  }},1000);
+}
+function pauseTimer(){clearInterval(timerInterval);timerRunning=false;document.getElementById('focus-start').style.display='';document.getElementById('focus-pause').style.display='none';}
+function resetTimer(){pauseTimer();timerSecs=timerSet*60;updateTimerDisplay();}
+
+// ─── RENDER ALL ───
+function renderAll() {
+  renderOverview(); renderTasks(); renderHabits(); renderHealth();
+  renderFinance(); renderGoals(); renderProjects(); renderJournal(); renderFocus();
+}
+
+// ─── SEED SAMPLE DATA ───
+function seedIfEmpty() {
+  if (D.tasks.length || D.habits.length) return;
+  D.tasks = [
+    {id:uid(),text:'Deploy WhatsApp bot to Railway',area:'tech',prio:'high',bucket:'today',due:today(),notes:'Twilio sandbox fix needed',done:false,created:now()},
+    {id:uid(),text:'Review Deye Cloud API endpoints',area:'tech',prio:'med',bucket:'today',due:today(),notes:'',done:false,created:now()},
+    {id:uid(),text:'Monthly budget review',area:'finance',prio:'high',bucket:'upcoming',due:'',notes:'',done:false,created:now()},
+    {id:uid(),text:'30 min workout',area:'health',prio:'med',bucket:'today',due:today(),notes:'',done:true,created:now()},
+    {id:uid(),text:'Read 20 pages',area:'personal',prio:'low',bucket:'backlog',due:'',notes:'',done:false,created:now()},
+  ];
+  D.habits = [
+    {id:uid(),name:'Morning workout',freq:'daily',cat:'health',time:'07:00',streak:7,log:{[today()]:false},created:now()},
+    {id:uid(),name:'Read 20 pages',freq:'daily',cat:'mind',time:'21:00',streak:3,log:{},created:now()},
+    {id:uid(),name:'Meditate 10min',freq:'daily',cat:'mind',time:'07:30',streak:14,log:{[today()]:true},created:now()},
+    {id:uid(),name:'Cold shower',freq:'daily',cat:'health',time:'07:15',streak:5,log:{},created:now()},
+  ];
+  D.transactions = [
+    {id:uid(),name:'Salary',amount:4500,type:'income',cat:'salary',date:today(),notes:'',created:now()},
+    {id:uid(),name:'Rent',amount:900,type:'expense',cat:'housing',date:today(),notes:'',created:now()},
+    {id:uid(),name:'Groceries',amount:85,type:'expense',cat:'food',date:today(),notes:'',created:now()},
+    {id:uid(),name:'Freelance project',amount:800,type:'income',cat:'freelance',date:today(),notes:'',created:now()},
+    {id:uid(),name:'Emergency fund',amount:500,type:'saving',cat:'other',date:today(),notes:'',created:now()},
+  ];
+  D.goals = [
+    {id:uid(),title:'Launch SaaS product',area:'career',target:'2026-06-30',metric:'100 paying users',why:'Financial freedom',progress:30,done:false,created:now()},
+    {id:uid(),title:'Run 5km under 25 min',area:'health',target:'2026-05-01',metric:'Sub-25 5km',why:'Peak fitness',progress:60,done:false,created:now()},
+    {id:uid(),title:'Save $10,000',area:'finance',target:'2026-12-31',metric:'$10k saved',why:'Emergency fund + freedom',progress:42,done:false,created:now()},
+  ];
+  D.projects = [
+    {id:uid(),name:'WhatsApp Bot',status:'active',due:'2026-04-15',pct:65,desc:'Twilio WhatsApp integration for client notifications',next:'Fix Twilio sandbox session expiry issue',created:now()},
+    {id:uid(),name:'Solar Monitor',status:'active',due:'2026-05-01',pct:30,desc:'Deye Cloud API + dashboard for inverter SOC tracking',next:'Test Deye API authentication flow',created:now()},
+  ];
+  D.journal = [
+    {id:uid(),date:today(),mood:'🔥',energy:8,title:'Big momentum day',text:'Shipped the WhatsApp bot MVP. Deye API is proving tricky but making progress. Feeling focused and locked in.',gratitude:'Progress on the bot, good coffee, clear thinking',created:now()},
+  ];
+  scheduleSave();
+  renderAll();
+}
+
+// ─── Date defaults ───
+document.addEventListener('DOMContentLoaded',()=>{
+  ['he-date','j-date','f-date','t-due'].forEach(id=>{
+    const el=document.getElementById(id); if(el&&el.type==='date') el.value=today();
+  });
+  updateTimerDisplay();
+});
+</script>
+</body>
+</html>
