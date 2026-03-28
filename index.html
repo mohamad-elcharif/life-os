@@ -1130,6 +1130,13 @@ let GIST_ID = localStorage.getItem('los-gist-id') || '';
 let syncTimer = null;
 let syncStatus = 'idle'; // idle | syncing | ok | err
 
+// ─── Helpers ───
+const today = () => new Date().toISOString().slice(0,10);
+const now = () => new Date().toISOString();
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtDate = d => d ? new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}) : '—';
+const uid = () => Date.now() + Math.random().toString(36).slice(2,7);
+
 // ─── Default data shape ───
 function defaultData() {
   return {
@@ -1141,13 +1148,6 @@ function defaultData() {
 }
 
 let D = defaultData();
-
-// ─── Helpers ───
-const today = () => new Date().toISOString().slice(0,10);
-const now = () => new Date().toISOString();
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const fmtDate = d => d ? new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}) : '—';
-const uid = () => Date.now() + Math.random().toString(36).slice(2,7);
 
 // ─── Sync bar ───
 function showSyncBar(on) { document.getElementById('sync-bar').classList.toggle('active', on); }
