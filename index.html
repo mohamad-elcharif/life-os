@@ -1823,7 +1823,7 @@ function startTimer(){
     D.focusSessions.push({id:uid(),date:today(),task:focusTask?.name||'Untitled',duration:timerSet,created:now()});
     scheduleSave();renderFocus();
     timerSecs=timerSet*60;updateTimerDisplay();
-    new Notification?.('✅ Session complete!',{body:`${timerSet} minutes logged.`});
+    if(typeof Notification!=='undefined')new Notification('✅ Session complete!',{body:`${timerSet} minutes logged.`});
   }},1000);
 }
 function pauseTimer(){clearInterval(timerInterval);timerRunning=false;document.getElementById('focus-start').style.display='';document.getElementById('focus-pause').style.display='none';}
