@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LIFE OS — Mohamad</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1219'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%232ec4a0' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23f0b445'/%3E%3Cline x1='16' y1='6' x2='16' y2='10' stroke='%232ec4a0' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='16' y1='22' x2='16' y2='26' stroke='%232ec4a0' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='6' y1='16' x2='10' y2='16' stroke='%232ec4a0' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='22' y1='16' x2='26' y2='16' stroke='%232ec4a0' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -628,11 +629,146 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
   .page-body { padding: 14px; }
   .topbar { padding: 12px 14px; }
 }
+
+/* ═══════════ PRAYER TIMES ═══════════ */
+.prayer-card {
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--radius); padding: 20px; text-align: center;
+  transition: all 0.2s; position: relative; overflow: hidden;
+}
+.prayer-card.active-prayer {
+  border-color: rgba(240,180,69,0.5);
+  background: linear-gradient(135deg, rgba(240,180,69,0.08) 0%, var(--bg3) 100%);
+  box-shadow: 0 0 20px rgba(240,180,69,0.12);
+}
+.prayer-card.active-prayer::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.prayer-name { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--fog); margin-bottom: 8px; font-family: var(--r-mono); }
+.prayer-time { font-family: var(--r-serif); font-size: 28px; color: var(--cream); }
+.prayer-arabic { font-size: 18px; color: var(--gold); margin-bottom: 4px; }
+.prayer-countdown { font-size: 9px; color: var(--teal); font-family: var(--r-mono); margin-top: 6px; }
+.hijri-date { font-family: var(--r-serif); font-size: 18px; color: var(--silver); font-style: italic; }
+
+/* ═══════════ NOTEPAD ═══════════ */
+.notepad-area {
+  width: 100%; min-height: 500px; padding: 20px;
+  background: var(--bg2); border: 1px solid var(--line2);
+  border-radius: var(--radius); color: var(--paper);
+  font-family: var(--r-mono); font-size: 13px; line-height: 1.8;
+  resize: vertical; outline: none; transition: border-color 0.2s;
+}
+.notepad-area:focus { border-color: var(--teal); }
+.note-tab {
+  padding: 7px 16px; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border: 1px solid var(--line2); border-bottom: none;
+  background: var(--bg3); color: var(--mist); cursor: pointer;
+  font-size: 11px; font-family: var(--r-mono); transition: all 0.15s;
+}
+.note-tab.active { background: var(--bg2); color: var(--gold); border-color: var(--line2); }
+.note-tab:hover:not(.active) { color: var(--paper); }
+.note-char-count { font-size: 9px; color: var(--fog); font-family: var(--r-mono); }
+.copy-toast {
+  position: fixed; bottom: 28px; right: 28px;
+  background: var(--teal); color: var(--bg); padding: 10px 20px;
+  border-radius: var(--radius); font-size: 12px; font-family: var(--r-mono);
+  font-weight: 700; z-index: 9999; opacity: 0; transform: translateY(10px);
+  transition: all 0.25s ease; pointer-events: none;
+}
+.copy-toast.show { opacity: 1; transform: translateY(0); }
+
+/* ═══════════ CAR MAINTENANCE ═══════════ */
+.maint-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  background: var(--bg3); border: 1px solid var(--line2);
+  margin-bottom: 8px; transition: all 0.2s;
+}
+.maint-item:hover { border-color: var(--line2); background: var(--bg4); }
+.maint-item:hover .row-actions { opacity: 1; }
+.maint-icon { font-size: 20px; width: 36px; text-align: center; flex-shrink: 0; }
+.maint-info { flex: 1; }
+.maint-name { font-size: 13px; color: var(--paper); font-weight: 600; margin-bottom: 2px; }
+.maint-meta { font-size: 9px; color: var(--fog); font-family: var(--r-mono); }
+.maint-status { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.maint-next { font-size: 10px; font-family: var(--r-mono); }
+.maint-overdue { color: var(--rose); }
+.maint-due-soon { color: var(--gold); }
+.maint-ok { color: var(--teal); }
+
+/* ═══════════ HOME CHECKLIST ═══════════ */
+.checklist-section { margin-bottom: 22px; }
+.checklist-section-title {
+  font-size: 9px; letter-spacing: 2px; color: var(--fog);
+  text-transform: uppercase; font-family: var(--r-mono);
+  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.checklist-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--bg3); border: 1px solid var(--line2);
+  margin-bottom: 6px; cursor: pointer; transition: all 0.15s;
+  user-select: none;
+}
+.checklist-item:hover { border-color: var(--fog); }
+.checklist-item.checked { opacity: 0.5; }
+.checklist-item.checked .check-box { background: var(--teal); border-color: var(--teal); }
+.checklist-label { flex: 1; font-size: 12px; color: var(--paper); }
+.checklist-item.checked .checklist-label { text-decoration: line-through; color: var(--fog); }
+.checklist-freq { font-size: 9px; color: var(--fog); font-family: var(--r-mono); }
+.checklist-progress-ring {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--radius); padding: 14px 18px; margin-bottom: 14px;
+}
+
+/* ═══════════ GROCERIES ═══════════ */
+.grocery-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--bg3); border: 1px solid var(--line2);
+  margin-bottom: 6px; transition: all 0.15s;
+}
+.grocery-item.in-cart { opacity: 0.4; }
+.grocery-item.in-cart .grocery-name { text-decoration: line-through; }
+.grocery-name { flex: 1; font-size: 12px; color: var(--paper); font-weight: 500; }
+.grocery-qty { font-size: 10px; color: var(--fog); font-family: var(--r-mono); margin-right: 4px; }
+.grocery-cat-badge { font-size: 8px; padding: 2px 7px; }
+.grocery-section { margin-bottom: 18px; }
+.grocery-section-header {
+  font-size: 9px; letter-spacing: 2px; color: var(--fog);
+  text-transform: uppercase; font-family: var(--r-mono);
+  margin-bottom: 8px; display: flex; justify-content: space-between;
+}
+
+/* ═══════════ SETTINGS / CONFIG ═══════════ */
+.config-card {
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
+}
+.config-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 99px;
+  background: var(--bg4); border: 1px solid var(--line2);
+  color: var(--silver); font-size: 11px; font-family: var(--r-mono);
+  cursor: pointer; transition: all 0.15s; margin: 3px;
+}
+.config-tag:hover { border-color: var(--rose); color: var(--rose); }
+.config-tag .del { color: var(--fog); font-size: 10px; }
+.config-area-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--bg4); border: 1px solid var(--line); margin-bottom: 6px;
+}
+.config-area-item:hover .row-actions { opacity: 1; }
+.config-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 </style>
 </head>
 <body>
 
 <div id="sync-bar"></div>
+<div class="copy-toast" id="copy-toast">✓ Copied to clipboard!</div>
 
 <!-- ══════════════ SETUP SCREEN ══════════════ -->
 <div id="setup-screen">
@@ -703,6 +839,16 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
       <div class="nav-section">Life Philosophy</div>
       <div class="nav-item" onclick="goTo('rules',this)"><span class="icon">✧</span> My Rules</div>
       <div class="nav-item" onclick="goTo('people',this)"><span class="icon">❤</span> My People</div>
+
+      <div class="nav-section">Daily Life</div>
+      <div class="nav-item" onclick="goTo('prayer',this)"><span class="icon">🌙</span> Prayer Times</div>
+      <div class="nav-item" onclick="goTo('notepad',this)"><span class="icon">📝</span> Notepad</div>
+      <div class="nav-item" onclick="goTo('groceries',this)"><span class="icon">🛒</span> Groceries</div>
+      <div class="nav-item" onclick="goTo('homechecklist',this)"><span class="icon">🏠</span> Home Checklist</div>
+      <div class="nav-item" onclick="goTo('carmaint',this)"><span class="icon">🚗</span> Car Maintenance</div>
+
+      <div class="nav-section">System</div>
+      <div class="nav-item" onclick="goTo('config',this)"><span class="icon">⚙</span> Configuration</div>
     </nav>
 
     <div class="sidebar-footer">
@@ -1161,6 +1307,278 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
       </div>
 
     </div><!-- /page-body -->
+
+      <!-- ══════ PRAYER TIMES ══════ -->
+      <div class="page" id="page-prayer">
+        <div class="section-head">
+          <div><div class="section-title">Prayer Times</div><div class="section-sub">Tripoli, Lebanon — Today's prayers</div></div>
+          <div id="prayer-hijri" class="hijri-date"></div>
+        </div>
+        <div id="prayer-countdown-banner" style="background:linear-gradient(135deg,rgba(240,180,69,0.1),rgba(46,196,160,0.1));border:1px solid rgba(240,180,69,0.25);border-radius:var(--radius);padding:14px 20px;margin-bottom:18px;display:flex;align-items:center;gap:14px;">
+          <div style="font-size:28px;">🌙</div>
+          <div>
+            <div style="font-size:11px;color:var(--fog);font-family:var(--r-mono);margin-bottom:2px;">NEXT PRAYER</div>
+            <div id="prayer-next-name" style="font-size:16px;color:var(--cream);font-weight:600;"></div>
+            <div id="prayer-next-countdown" style="font-size:12px;color:var(--teal);font-family:var(--r-mono);margin-top:2px;"></div>
+          </div>
+        </div>
+        <div class="g3" style="margin-bottom:14px;">
+          <div class="prayer-card" id="pc-fajr">
+            <div class="prayer-arabic">الفجر</div>
+            <div class="prayer-name">Fajr</div>
+            <div class="prayer-time" id="pt-fajr">—</div>
+            <div class="prayer-countdown" id="pcd-fajr"></div>
+          </div>
+          <div class="prayer-card" id="pc-sunrise">
+            <div class="prayer-arabic">الشروق</div>
+            <div class="prayer-name">Sunrise</div>
+            <div class="prayer-time" id="pt-sunrise">—</div>
+            <div class="prayer-countdown" id="pcd-sunrise"></div>
+          </div>
+          <div class="prayer-card" id="pc-dhuhr">
+            <div class="prayer-arabic">الظهر</div>
+            <div class="prayer-name">Dhuhr</div>
+            <div class="prayer-time" id="pt-dhuhr">—</div>
+            <div class="prayer-countdown" id="pcd-dhuhr"></div>
+          </div>
+          <div class="prayer-card" id="pc-asr">
+            <div class="prayer-arabic">العصر</div>
+            <div class="prayer-name">Asr</div>
+            <div class="prayer-time" id="pt-asr">—</div>
+            <div class="prayer-countdown" id="pcd-asr"></div>
+          </div>
+          <div class="prayer-card" id="pc-maghrib">
+            <div class="prayer-arabic">المغرب</div>
+            <div class="prayer-name">Maghrib</div>
+            <div class="prayer-time" id="pt-maghrib">—</div>
+            <div class="prayer-countdown" id="pcd-maghrib"></div>
+          </div>
+          <div class="prayer-card" id="pc-isha">
+            <div class="prayer-arabic">العشاء</div>
+            <div class="prayer-name">Isha</div>
+            <div class="prayer-time" id="pt-isha">—</div>
+            <div class="prayer-countdown" id="pcd-isha"></div>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-eyebrow" style="margin-bottom:10px;">Weekly Prayer Schedule</div>
+            <div id="prayer-week-schedule"></div>
+          </div>
+          <div class="card">
+            <div class="card-eyebrow" style="margin-bottom:10px;">Calculation Method</div>
+            <div style="font-size:11px;color:var(--silver);line-height:1.8;">
+              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Location</span> — Tripoli, Lebanon (34.43°N, 35.85°E)</div>
+              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Method</span> — Muslim World League</div>
+              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Madhab</span> — Shafi'i</div>
+              <div><span style="color:var(--gold);font-family:var(--r-mono);">Source</span> — Aladhan API (live)</div>
+            </div>
+            <div class="divider"></div>
+            <button class="btn btn-teal btn-sm" onclick="loadPrayerTimes()">↻ Refresh Times</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ NOTEPAD ══════ -->
+      <div class="page" id="page-notepad">
+        <div class="section-head">
+          <div><div class="section-title">Notepad</div><div class="section-sub">Write anything. Copy anywhere. Auto-saved.</div></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="note-char-count" id="note-char-count">0 chars</span>
+            <button class="btn btn-teal btn-sm" onclick="copyNote()">⎘ Copy All</button>
+            <button class="btn btn-sm" onclick="clearNote()">✕ Clear</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:0;margin-bottom:0;">
+          <button class="note-tab active" id="ntab-0" onclick="switchNote(0)">Note 1</button>
+          <button class="note-tab" id="ntab-1" onclick="switchNote(1)">Note 2</button>
+          <button class="note-tab" id="ntab-2" onclick="switchNote(2)">Note 3</button>
+          <button class="note-tab" id="ntab-3" onclick="switchNote(3)">Clipboard</button>
+        </div>
+        <textarea class="notepad-area" id="notepad-textarea" placeholder="Start typing… your note is auto-saved and synced. Copy this text on any device using the button above." oninput="onNoteInput()"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+          <span style="font-size:9px;color:var(--fog);font-family:var(--r-mono);">Auto-saved to your GitHub Gist — accessible on any device</span>
+          <button class="btn btn-sm btn-ghost" onclick="copyNote()">Copy to clipboard</button>
+        </div>
+      </div>
+
+      <!-- ══════ CAR MAINTENANCE ══════ -->
+      <div class="page" id="page-carmaint">
+        <div class="section-head">
+          <div><div class="section-title">Car Maintenance</div><div class="section-sub">Keep your car running like new.</div></div>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('maint-panel')">+ Log Service</button>
+        </div>
+        <div class="form-panel" id="maint-panel">
+          <div class="g2">
+            <div class="field"><label>Service Type</label><input class="input" id="cm-type" placeholder="e.g. Oil Change"></div>
+            <div class="field"><label>Date Done</label><input class="input" id="cm-date" type="date"></div>
+            <div class="field"><label>Mileage at Service (km)</label><input class="input" id="cm-mileage" type="number" placeholder="e.g. 45000"></div>
+            <div class="field"><label>Next Service Interval</label>
+              <select class="input" id="cm-interval">
+                <option value="5000">5,000 km</option>
+                <option value="10000" selected>10,000 km</option>
+                <option value="15000">15,000 km</option>
+                <option value="20000">20,000 km</option>
+                <option value="30000">30,000 km</option>
+                <option value="40000">40,000 km</option>
+                <option value="0">Date-based only</option>
+              </select>
+            </div>
+            <div class="field"><label>Next Service Date</label><input class="input" id="cm-nextdate" type="date"></div>
+            <div class="field"><label>Cost ($)</label><input class="input" id="cm-cost" type="number" placeholder="0.00"></div>
+            <div class="field"><label>Shop / Technician</label><input class="input" id="cm-shop" placeholder="e.g. Al Wadi Garage"></div>
+            <div class="field"><label>Notes</label><input class="input" id="cm-notes" placeholder="optional"></div>
+          </div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="addMaintRecord()">Save Record</button>
+            <button class="btn" onclick="closePanel('maint-panel')">Cancel</button>
+          </div>
+        </div>
+        <div class="g4" style="margin-bottom:14px;" id="car-stats"></div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-eyebrow" style="margin-bottom:12px;">Service History</div>
+            <div id="maint-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-eyebrow" style="margin-bottom:12px;">Upcoming & Reminders</div>
+            <div id="maint-upcoming"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ HOME CHECKLIST ══════ -->
+      <div class="page" id="page-homechecklist">
+        <div class="section-head">
+          <div><div class="section-title">Home Checklist</div><div class="section-sub">Keep your home in perfect order.</div></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm" onclick="resetHomeChecklist()">↺ Reset All</button>
+            <button class="btn btn-gold btn-sm" onclick="openPanel('home-item-panel')">+ Add Item</button>
+          </div>
+        </div>
+        <div class="form-panel" id="home-item-panel">
+          <div class="g2">
+            <div class="field"><label>Task Name</label><input class="input" id="hci-name" placeholder="e.g. Clean oven"></div>
+            <div class="field"><label>Category</label>
+              <select class="input" id="hci-cat">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="seasonal">Seasonal</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="addHomeItem()">Add Item</button>
+            <button class="btn" onclick="closePanel('home-item-panel')">Cancel</button>
+          </div>
+        </div>
+        <div class="checklist-progress-ring" id="home-progress-ring"></div>
+        <div id="home-checklist-content"></div>
+      </div>
+
+      <!-- ══════ GROCERIES ══════ -->
+      <div class="page" id="page-groceries">
+        <div class="section-head">
+          <div><div class="section-title">Groceries</div><div class="section-sub">Your smart shopping list.</div></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm" onclick="clearCartedItems()">✕ Clear Cart</button>
+            <button class="btn btn-gold btn-sm" onclick="openPanel('grocery-panel')">+ Add Item</button>
+          </div>
+        </div>
+        <div class="form-panel" id="grocery-panel">
+          <div class="g2">
+            <div class="field"><label>Item</label><input class="input" id="gr-name" placeholder="e.g. Olive oil"></div>
+            <div class="field"><label>Category</label>
+              <select class="input" id="gr-cat">
+                <option value="produce">🥦 Produce</option>
+                <option value="dairy">🥛 Dairy</option>
+                <option value="meat">🥩 Meat & Fish</option>
+                <option value="bakery">🍞 Bakery</option>
+                <option value="pantry">🥫 Pantry</option>
+                <option value="frozen">❄️ Frozen</option>
+                <option value="beverages">🧃 Beverages</option>
+                <option value="snacks">🍪 Snacks</option>
+                <option value="hygiene">🧴 Hygiene</option>
+                <option value="household">🧹 Household</option>
+                <option value="other">📦 Other</option>
+              </select>
+            </div>
+            <div class="field"><label>Quantity</label><input class="input" id="gr-qty" placeholder="e.g. 2 packs"></div>
+            <div class="field"><label>Notes</label><input class="input" id="gr-notes" placeholder="brand, size, etc."></div>
+          </div>
+          <div class="form-row" style="margin-top:14px;">
+            <button class="btn btn-gold" onclick="addGroceryItem()">Add to List</button>
+            <button class="btn" onclick="closePanel('grocery-panel')">Cancel</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;" id="grocery-filter-tabs"></div>
+        <div id="grocery-list"></div>
+      </div>
+
+      <!-- ══════ CONFIGURATION ══════ -->
+      <div class="page" id="page-config">
+        <div class="section-head">
+          <div><div class="section-title">Configuration</div><div class="section-sub">Customize your Life OS to fit your world.</div></div>
+        </div>
+
+        <!-- Task Areas -->
+        <div class="config-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--cream);margin-bottom:3px;">Task Areas</div>
+              <div style="font-size:10px;color:var(--fog);font-family:var(--r-mono);">Define areas that appear in Tasks, Habits, and other sections</div>
+            </div>
+            <button class="btn btn-gold btn-sm" onclick="openPanel('area-panel')">+ New Area</button>
+          </div>
+          <div class="form-panel" id="area-panel" style="margin-bottom:0;">
+            <div class="g2">
+              <div class="field"><label>Area Name</label><input class="input" id="ca-name" placeholder="e.g. Family"></div>
+              <div class="field"><label>Color</label>
+                <select class="input" id="ca-color">
+                  <option value="gold">Gold</option>
+                  <option value="teal">Teal</option>
+                  <option value="sky">Sky</option>
+                  <option value="violet">Violet</option>
+                  <option value="ember">Ember</option>
+                  <option value="rose">Rose</option>
+                  <option value="silver">Silver</option>
+                </select>
+              </div>
+              <div class="field"><label>Icon (emoji)</label><input class="input" id="ca-icon" placeholder="e.g. 🏡" maxlength="4"></div>
+            </div>
+            <div class="form-row" style="margin-top:12px;">
+              <button class="btn btn-gold btn-sm" onclick="addTaskArea()">Add Area</button>
+              <button class="btn btn-sm" onclick="closePanel('area-panel')">Cancel</button>
+            </div>
+          </div>
+          <div id="config-areas-list" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- GitHub Sync -->
+        <div class="config-card">
+          <div style="font-size:14px;font-weight:700;color:var(--cream);margin-bottom:4px;">GitHub Sync</div>
+          <div style="font-size:10px;color:var(--fog);font-family:var(--r-mono);margin-bottom:14px;">Your data syncs to a private GitHub Gist across all devices</div>
+          <div class="g2">
+            <div class="field"><label>GitHub PAT</label><input class="input" id="cfg-pat" type="password" placeholder="ghp_…"></div>
+            <div class="field"><label>Gist ID (auto)</label><input class="input" id="cfg-gid" placeholder="auto-detected"></div>
+          </div>
+          <div class="form-row" style="margin-top:12px;">
+            <button class="btn btn-gold btn-sm" onclick="saveGitConfig()">Save & Sync</button>
+            <button class="btn btn-danger btn-sm" onclick="if(confirm('Reset ALL local data?')){localStorage.clear();location.reload();}">⚠ Reset Everything</button>
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="config-card">
+          <div style="font-size:14px;font-weight:700;color:var(--cream);margin-bottom:4px;">About Life OS</div>
+          <div style="font-size:11px;color:var(--silver);line-height:1.9;font-family:var(--r-mono);">
+            Version 2.0 · Built for Mohamad<br>
+            Single-file app · No server needed · GitHub Gist sync<br>
+            All data stored privately in your GitHub account
+          </div>
+        </div>
+      </div>
   </main>
 </div><!-- /app -->
 
@@ -1208,6 +1626,16 @@ function defaultData() {
     transactions:[], goals:[], projects:[],
     journal:[], focusSessions:[],
     rules:[], people:[],
+    notes:['','','',''],
+    maintRecords:[], homeChecklist:[], groceries:[],
+    taskAreas:[
+      {id:'work',name:'Work',color:'gold',icon:'💼',builtin:true},
+      {id:'personal',name:'Personal',color:'teal',icon:'🌿',builtin:true},
+      {id:'health',name:'Health',color:'teal',icon:'💪',builtin:true},
+      {id:'finance',name:'Finance',color:'sky',icon:'💰',builtin:true},
+      {id:'tech',name:'Tech',color:'violet',icon:'💻',builtin:true},
+      {id:'social',name:'Social',color:'ember',icon:'🫂',builtin:true},
+    ],
     meta:{ created:today(), lastSync:null }
   };
 }
@@ -1325,6 +1753,7 @@ function scheduleSave() {
 }
 
 async function syncNow(mode='both') {
+  if(!PAT) return; // no token — skip silently
   setSyncStatus('syncing','Syncing…');
   try {
     if(!GIST_ID) await findOrCreateGist();
@@ -1334,7 +1763,7 @@ async function syncNow(mode='both') {
     renderAll();
   } catch(e) {
     setSyncStatus('err','Sync failed — '+e.message);
-    console.error(e);
+    console.warn('[LifeOS] Sync failed:', e.message); // warn not error — expected when offline
   }
 }
 
@@ -1375,6 +1804,7 @@ function launchApp() {
   renderAll();
   seedIfEmpty();
   loadNews();
+  rebuildTaskAreaDropdowns();
 }
 
 window.addEventListener('beforeunload', () => { saveLocal(); });
@@ -1394,13 +1824,13 @@ window.addEventListener('DOMContentLoaded', () => {
       } else {
         document.getElementById('setup-screen').style.display = 'flex';
       }
-      console.error(e);
+      console.warn('[LifeOS] GitHub Gist sync failed:', e.message);
     });
   } else {
     document.getElementById('setup-screen').style.display = 'flex';
   }
   updateTopbar();
-  ['he-date','j-date','f-date','t-due'].forEach(id=>{
+  ['he-date','j-date','f-date','t-due','cm-date','cm-nextdate'].forEach(id=>{
     const e=document.getElementById(id); if(e && e.type==='date') e.value=today();
   });
   updateTimerDisplay();
@@ -1412,7 +1842,9 @@ window.addEventListener('DOMContentLoaded', () => {
 const PAGE_TITLES = {
   overview:'Overview', tasks:'Tasks', habits:'Habits', focus:'Focus',
   health:'Health', journal:'Journal', goals:'Goals', projects:'Projects',
-  finance:'Finance', news:'News & Trends', rules:'My Rules', people:'My People'
+  finance:'Finance', news:'News & Trends', rules:'My Rules', people:'My People',
+  prayer:'🌙 Prayer Times', notepad:'📝 Notepad', groceries:'🛒 Groceries',
+  homechecklist:'🏠 Home Checklist', carmaint:'🚗 Car Maintenance', config:'⚙ Configuration'
 };
 
 function goTo(page, navEl) {
@@ -1423,6 +1855,9 @@ function goTo(page, navEl) {
   document.getElementById('topbar-title').textContent = PAGE_TITLES[page]||page;
   document.getElementById('sidebar').classList.remove('mobile-open');
   if(page==='news') loadNews();
+  if(page==='prayer') { loadPrayerTimes(); startPrayerClock(); }
+  if(page==='notepad') initNotepad();
+  if(page==='config') { initConfigPage(); }
   renderAll();
 }
 
@@ -2189,6 +2624,7 @@ function renderAll() {
   renderOverview(); renderTasks(); renderHabits(); renderHealth();
   renderFinance(); renderGoals(); renderProjects(); renderJournal();
   renderFocus(); renderRules(); renderPeople();
+  renderConfigAreas(); renderMaintenance(); renderHomeChecklist(); renderGroceries();
 }
 
 // ─── SEED SAMPLE DATA ───
@@ -2241,6 +2677,732 @@ function seedIfEmpty() {
   D.meta.seeded = true;
   scheduleSave(); renderAll();
 }
+// ═══════════════════════════════════════════════════
+//  PRAYER TIMES — Tripoli, Lebanon
+// ═══════════════════════════════════════════════════
+let prayerData = null;
+let prayerClockInterval = null;
+
+async function loadPrayerTimes() {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  // Aladhan API: date is a path parameter, not a query parameter
+  const url = `https://api.aladhan.com/v1/timingsByCity/${dd}-${mm}-${yyyy}?city=Tripoli&country=Lebanon&method=3&school=0`;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const json = await resp.json();
+    if (json.code === 200 && json.data) {
+      prayerData = json.data;
+      renderPrayerTimes();
+      renderPrayerWeek();
+      return;
+    }
+    throw new Error('Bad response from Aladhan');
+  } catch(e) {
+    console.warn('[LifeOS] Prayer API unavailable, using computed times:', e.message);
+    // Compute prayer times locally using astronomical algorithm for Tripoli, Lebanon
+    // Coords: 34.4367° N, 35.8497° E  —  Timezone: UTC+3 (or UTC+2 in winter, JS handles this)
+    prayerData = computePrayerTimesLocally(d);
+    renderPrayerTimes();
+    renderPrayerWeek();
+    // Show a subtle note on the hijri field
+    const hijriEl = document.getElementById('prayer-hijri');
+    if (hijriEl && !hijriEl.textContent.includes('AH')) {
+      hijriEl.textContent += ' (computed)';
+    }
+  }
+}
+
+// ── Astronomical prayer time calculator for Tripoli, Lebanon ──
+// Method: Muslim World League  |  Fajr: 18°  Isha: 17°
+// Lat: 34.4367  Lng: 35.8497  TZ offset: +2 (winter) / +3 (summer, DST)
+function computePrayerTimesLocally(date) {
+  const lat = 34.4367, lng = 35.8497;
+  // Get UTC offset in hours from the browser (accounts for DST)
+  const tzOffsetHours = -date.getTimezoneOffset() / 60;
+
+  const JD = dateToJulian(date);
+  const D = JD - 2451545.0;
+  const g = (357.529 + 0.98560028 * D) % 360;
+  const q = (280.459 + 0.98564736 * D) % 360;
+  const L = (q + 1.915 * sinD(g) + 0.020 * sinD(2*g)) % 360;
+  const e = 23.439 - 0.00000036 * D;
+  const RA = atan2D(cosD(e)*sinD(L), cosD(L)) / 15;
+  const sinDec = sinD(e) * sinD(L);
+  const cosDec = Math.sqrt(1 - sinDec*sinDec);
+  const EqT = q/15 - fixHour(RA);
+
+  function sunAngleTime(angle, ccw) {
+    const cosH = (-sinD(angle) - sinD(lat)*sinDec) / (cosD(lat)*cosDec);
+    if (Math.abs(cosH) > 1) return null;
+    const H = acosD(cosH) / 15;
+    return 12 - EqT - lng/15 + (ccw ? -H : H) + tzOffsetHours;
+  }
+
+  function asrTime(shadow) {
+    const angle = -atanD(1 / (shadow + Math.tan(Math.abs(lat - asinD(sinDec)) * Math.PI/180)));
+    return sunAngleTime(angle, false);
+  }
+
+  const fajr    = sunAngleTime(-18, true);
+  const sunrise = sunAngleTime(-0.833, true);
+  const dhuhr   = 12 - EqT - lng/15 + tzOffsetHours;
+  const asr     = asrTime(1); // Shafi
+  const maghrib = sunAngleTime(-0.833, false);
+  const isha    = sunAngleTime(-17, false);
+
+  function toHHMM(h) {
+    if (h === null) return '00:00';
+    h = fixHour(h);
+    const hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+    return `${String(hh).padStart(2,'0')}:${String(mm >= 60 ? 59 : mm).padStart(2,'0')}`;
+  }
+
+  // Build Hijri date approximation
+  const hijri = gregorianToHijri(date);
+
+  return {
+    timings: {
+      Fajr:    toHHMM(fajr),
+      Sunrise: toHHMM(sunrise),
+      Dhuhr:   toHHMM(dhuhr),
+      Asr:     toHHMM(asr),
+      Maghrib: toHHMM(maghrib),
+      Isha:    toHHMM(isha),
+      Midnight:'00:00', Imsak:'00:00', Firstthird:'00:00', Lastthird:'00:00'
+    },
+    date: {
+      hijri: {
+        day:   String(hijri.day),
+        month: { en: hijri.monthName },
+        year:  String(hijri.year)
+      }
+    }
+  };
+}
+
+// ── Math helpers ──
+const sinD  = x => Math.sin(x * Math.PI / 180);
+const cosD  = x => Math.cos(x * Math.PI / 180);
+const tanD  = x => Math.tan(x * Math.PI / 180);
+const asinD = x => Math.asin(x) * 180 / Math.PI;
+const acosD = x => Math.acos(x) * 180 / Math.PI;
+const atanD = x => Math.atan(x) * 180 / Math.PI;
+const atan2D= (y,x) => Math.atan2(y,x) * 180 / Math.PI;
+const fixHour = h => h - 24 * Math.floor(h / 24);
+
+function dateToJulian(date) {
+  const Y = date.getFullYear(), M = date.getMonth()+1, D2 = date.getDate();
+  let y = Y, m = M;
+  if (m <= 2) { y--; m += 12; }
+  const A = Math.floor(y/100), B = 2 - A + Math.floor(A/4);
+  return Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + D2 + B - 1524.5;
+}
+
+function gregorianToHijri(date) {
+  const HIJRI_MONTHS = ['Muharram','Safar','Rabi al-Awwal','Rabi al-Thani',
+    'Jumada al-Awwal','Jumada al-Thani','Rajab','Sha\'ban','Ramadan','Shawwal',
+    'Dhu al-Qi\'dah','Dhu al-Hijjah'];
+  let jd = Math.floor(dateToJulian(date)) + 0.5;
+  let l = jd - 1948440 + 10632;
+  const n = Math.floor((l-1)/10631);
+  l = l - 10631*n + 354;
+  const j = Math.floor((10985-l)/5316) * Math.floor((50*l)/17719)
+           + Math.floor(l/5670) * Math.floor((43*l)/15238);
+  l = l - Math.floor((30-j)/15) * Math.floor((17719*j)/50)
+        - Math.floor(j/16) * Math.floor((15238*j)/43) + 29;
+  const month = Math.floor((24*l)/709);
+  const day = l - Math.floor((709*month)/24);
+  const year = 30*n + j - 30;
+  return { day, month, year, monthName: HIJRI_MONTHS[month-1] || '' };
+}
+
+function renderPrayerTimes() {
+  if(!prayerData) return;
+  const t = prayerData.timings;
+  const hijri = prayerData.date.hijri;
+  const hijriEl = document.getElementById('prayer-hijri');
+  if(hijriEl) hijriEl.textContent = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
+
+  const prayers = [
+    {key:'fajr', api:'Fajr'},
+    {key:'sunrise', api:'Sunrise'},
+    {key:'dhuhr', api:'Dhuhr'},
+    {key:'asr', api:'Asr'},
+    {key:'maghrib', api:'Maghrib'},
+    {key:'isha', api:'Isha'},
+  ];
+  prayers.forEach(p => {
+    const raw = t[p.api];
+    const el2 = document.getElementById('pt-'+p.key);
+    if(el2) el2.textContent = formatPrayerTime(raw);
+  });
+  updatePrayerHighlight();
+}
+
+function formatPrayerTime(raw) {
+  if(!raw) return '—';
+  const [hh,mm] = raw.replace(/\s*([\+\-]\d+)?$/, '').split(':').map(Number);
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  const h12 = hh % 12 || 12;
+  return `${h12}:${String(mm).padStart(2,'0')} ${ampm}`;
+}
+
+function getPrayerMinutes(raw) {
+  if(!raw) return null;
+  const [hh,mm] = raw.replace(/\s*([\+\-]\d+)?$/, '').split(':').map(Number);
+  return hh * 60 + mm;
+}
+
+function updatePrayerHighlight() {
+  if(!prayerData) return;
+  const t = prayerData.timings;
+  const now = new Date();
+  const curMin = now.getHours()*60 + now.getMinutes();
+
+  const order = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
+  const keyMap = {Fajr:'fajr',Sunrise:'sunrise',Dhuhr:'dhuhr',Asr:'asr',Maghrib:'maghrib',Isha:'isha'};
+
+  const mins = order.map(k => ({key:keyMap[k], min: getPrayerMinutes(t[k]), name:k}));
+
+  // remove all active
+  mins.forEach(p => {
+    const card = document.getElementById('pc-'+p.key);
+    if(card) card.classList.remove('active-prayer');
+  });
+
+  // find current and next
+  let nextPrayer = null;
+  let currentPrayer = null;
+
+  for(let i = 0; i < mins.length; i++) {
+    if(mins[i].min === null) continue;
+    if(curMin < mins[i].min) {
+      nextPrayer = mins[i];
+      currentPrayer = i > 0 ? mins[i-1] : mins[mins.length-1];
+      break;
+    }
+  }
+  if(!nextPrayer) {
+    nextPrayer = mins[0]; // wrap to Fajr next day
+    currentPrayer = mins[mins.length-1];
+  }
+
+  // highlight current
+  if(currentPrayer) {
+    const card = document.getElementById('pc-'+currentPrayer.key);
+    if(card) card.classList.add('active-prayer');
+  }
+
+  // update countdown banner
+  const nameEl = document.getElementById('prayer-next-name');
+  const cntEl = document.getElementById('prayer-next-countdown');
+  if(nameEl) nameEl.textContent = nextPrayer.name;
+
+  if(cntEl && nextPrayer.min !== null) {
+    let diff = nextPrayer.min - curMin;
+    if(diff < 0) diff += 24*60;
+    const hrs = Math.floor(diff/60);
+    const mns = diff%60;
+    cntEl.textContent = hrs > 0 ? `in ${hrs}h ${mns}m` : `in ${mns} minutes`;
+  }
+}
+
+function startPrayerClock() {
+  if(prayerClockInterval) clearInterval(prayerClockInterval);
+  prayerClockInterval = setInterval(updatePrayerHighlight, 30000);
+}
+
+function renderPrayerWeek() {
+  // Show today's full prayer time list styled
+  if(!prayerData) return;
+  const t = prayerData.timings;
+  const list = [
+    {name:'Fajr', arabic:'الفجر', key:'Fajr', icon:'🌅'},
+    {name:'Sunrise', arabic:'الشروق', key:'Sunrise', icon:'☀️'},
+    {name:'Dhuhr', arabic:'الظهر', key:'Dhuhr', icon:'🌤'},
+    {name:'Asr', arabic:'العصر', key:'Asr', icon:'⛅'},
+    {name:'Maghrib', arabic:'المغرب', key:'Maghrib', icon:'🌇'},
+    {name:'Isha', arabic:'العشاء', key:'Isha', icon:'🌙'},
+  ];
+  const html = list.map(p => `
+    <div class="row-item" style="padding:10px 0;">
+      <div style="font-size:18px;width:28px;">${p.icon}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;color:var(--paper);font-weight:600;">${p.name}</div>
+        <div style="font-size:10px;color:var(--fog);">${p.arabic}</div>
+      </div>
+      <div style="font-family:var(--r-mono);font-size:14px;color:var(--gold);">${formatPrayerTime(t[p.key])}</div>
+    </div>`).join('<div style="height:1px;background:var(--line);"></div>');
+  const el2 = document.getElementById('prayer-week-schedule');
+  if(el2) el2.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+//  NOTEPAD
+// ═══════════════════════════════════════════════════
+let currentNoteIndex = 0;
+
+function initNotepad() {
+  if(!D.notes) D.notes = ['','','',''];
+  while(D.notes.length < 4) D.notes.push('');
+  switchNote(currentNoteIndex);
+}
+
+function switchNote(idx) {
+  // Save current before switching
+  const ta = document.getElementById('notepad-textarea');
+  if(ta && D.notes) D.notes[currentNoteIndex] = ta.value;
+  currentNoteIndex = idx;
+  if(!D.notes) D.notes = ['','','',''];
+  if(ta) ta.value = D.notes[idx] || '';
+  // Update tabs
+  for(let i=0;i<4;i++){
+    const tab = document.getElementById('ntab-'+i);
+    if(tab) tab.classList.toggle('active', i===idx);
+  }
+  updateNoteCount();
+}
+
+function onNoteInput() {
+  const ta = document.getElementById('notepad-textarea');
+  if(ta && D.notes) {
+    D.notes[currentNoteIndex] = ta.value;
+    updateNoteCount();
+    scheduleSave();
+  }
+}
+
+function updateNoteCount() {
+  const ta = document.getElementById('notepad-textarea');
+  const el2 = document.getElementById('note-char-count');
+  if(ta && el2) {
+    const len = ta.value.length;
+    const words = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+    el2.textContent = `${len} chars · ${words} words`;
+  }
+}
+
+function copyNote() {
+  const ta = document.getElementById('notepad-textarea');
+  if(!ta) return;
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const toast = document.getElementById('copy-toast');
+    if(toast){ toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),2000); }
+  }).catch(()=>{
+    ta.select(); document.execCommand('copy');
+    const toast = document.getElementById('copy-toast');
+    if(toast){ toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),2000); }
+  });
+}
+
+function clearNote() {
+  if(!confirm('Clear this note?')) return;
+  const ta = document.getElementById('notepad-textarea');
+  if(ta) ta.value = '';
+  if(D.notes) D.notes[currentNoteIndex] = '';
+  updateNoteCount();
+  scheduleSave();
+}
+
+// ═══════════════════════════════════════════════════
+//  CAR MAINTENANCE
+// ═══════════════════════════════════════════════════
+const maintIcons = {
+  'Oil Change':'🛢️','Tire Rotation':'🔄','Brake Check':'🛑','Air Filter':'💨',
+  'Battery':'🔋','Transmission':'⚙️','Coolant':'💧','Spark Plugs':'⚡',
+  'Wiper Blades':'🌧️','Alignment':'📐','AC Service':'❄️','Timing Belt':'⏱️',
+};
+
+function getMaintIcon(type) {
+  for(const k of Object.keys(maintIcons)) {
+    if(type.toLowerCase().includes(k.toLowerCase().split(' ')[0])) return maintIcons[k];
+  }
+  return '🔧';
+}
+
+function addMaintRecord() {
+  const type = document.getElementById('cm-type').value.trim();
+  if(!type) return;
+  if(!D.maintRecords) D.maintRecords = [];
+  D.maintRecords.push({
+    id: uid(),
+    type,
+    date: document.getElementById('cm-date').value || today(),
+    mileage: parseInt(document.getElementById('cm-mileage').value)||0,
+    interval: parseInt(document.getElementById('cm-interval').value)||0,
+    nextDate: document.getElementById('cm-nextdate').value||'',
+    cost: parseFloat(document.getElementById('cm-cost').value)||0,
+    shop: document.getElementById('cm-shop').value,
+    notes: document.getElementById('cm-notes').value,
+    created: now()
+  });
+  document.getElementById('cm-type').value = '';
+  document.getElementById('cm-mileage').value = '';
+  document.getElementById('cm-cost').value = '';
+  document.getElementById('cm-shop').value = '';
+  document.getElementById('cm-notes').value = '';
+  closePanel('maint-panel');
+  scheduleSave(); renderMaintenance();
+}
+
+function renderMaintenance() {
+  if(!D.maintRecords) D.maintRecords = [];
+  const records = D.maintRecords;
+
+  // Stats
+  const totalCost = records.reduce((a,b)=>a+(b.cost||0),0);
+  const lastRecord = records[records.length-1];
+  const maxMileage = records.length ? Math.max(...records.map(r=>r.mileage||0)) : 0;
+  const el2 = document.getElementById('car-stats');
+  if(el2) el2.innerHTML = `
+    <div class="card card-accent-top card-gold"><div class="card-eyebrow">Total Services</div><div class="card-value gold" style="font-size:28px;">${records.length}</div></div>
+    <div class="card card-accent-top card-sky"><div class="card-eyebrow">Total Cost</div><div class="card-value sky" style="font-size:24px;">$${totalCost.toLocaleString()}</div></div>
+    <div class="card card-accent-top card-teal"><div class="card-eyebrow">Last Mileage</div><div class="card-value teal" style="font-size:24px;">${maxMileage ? maxMileage.toLocaleString()+' km' : '—'}</div></div>
+    <div class="card card-accent-top card-ember"><div class="card-eyebrow">Last Service</div><div class="card-value ember" style="font-size:20px;margin-top:4px;">${lastRecord ? fmtDate(lastRecord.date) : '—'}</div></div>
+  `;
+
+  // History
+  const listEl = document.getElementById('maint-list');
+  if(listEl) listEl.innerHTML = records.length ? records.slice().reverse().map(r=>`
+    <div class="maint-item">
+      <div class="maint-icon">${getMaintIcon(r.type)}</div>
+      <div class="maint-info">
+        <div class="maint-name">${esc(r.type)}</div>
+        <div class="maint-meta">${fmtDate(r.date)}${r.mileage?' · '+r.mileage.toLocaleString()+' km':''}${r.shop?' · '+esc(r.shop):''}${r.notes?' · '+esc(r.notes):''}</div>
+      </div>
+      <div class="maint-status">
+        ${r.cost?`<span class="chip chip-gold">$${r.cost}</span>`:''}
+        ${r.nextDate?`<div class="maint-next" style="color:var(--fog);">Next: ${fmtDate(r.nextDate)}</div>`:''}
+      </div>
+      <div class="row-actions"><button class="btn-edit" onclick="deleteMaintRecord('${r.id}')">🗑</button></div>
+    </div>`).join('') : '<div class="empty"><div class="empty-icon">🔧</div>No service records yet. Log your first maintenance.</div>';
+
+  // Upcoming
+  const todayMs = new Date().getTime();
+  const upcomingEl = document.getElementById('maint-upcoming');
+  if(upcomingEl) {
+    const upcoming = records.filter(r => r.nextDate).map(r => {
+      const d = new Date(r.nextDate+'T12:00');
+      const diffDays = Math.round((d-new Date())/(1000*60*60*24));
+      return {...r, diffDays};
+    }).sort((a,b)=>a.diffDays-b.diffDays);
+
+    if(upcoming.length) {
+      upcomingEl.innerHTML = upcoming.map(r => {
+        const cls = r.diffDays < 0 ? 'maint-overdue' : r.diffDays <= 30 ? 'maint-due-soon' : 'maint-ok';
+        const label = r.diffDays < 0 ? `${Math.abs(r.diffDays)}d overdue` : r.diffDays === 0 ? 'Due today!' : `in ${r.diffDays}d`;
+        return `<div class="maint-item">
+          <div class="maint-icon">${getMaintIcon(r.type)}</div>
+          <div class="maint-info">
+            <div class="maint-name">${esc(r.type)}</div>
+            <div class="maint-meta">Due ${fmtDate(r.nextDate)}</div>
+          </div>
+          <div class="maint-next ${cls}">${label}</div>
+        </div>`;
+      }).join('');
+    } else {
+      upcomingEl.innerHTML = '<div class="empty"><div class="empty-icon">✅</div>No upcoming services. Set a next date when logging.</div>';
+    }
+  }
+}
+
+function deleteMaintRecord(id) {
+  if(!confirm('Delete this record?')) return;
+  D.maintRecords = (D.maintRecords||[]).filter(r=>r.id!==id);
+  scheduleSave(); renderMaintenance();
+}
+
+// ═══════════════════════════════════════════════════
+//  HOME CHECKLIST
+// ═══════════════════════════════════════════════════
+const DEFAULT_HOME_ITEMS = [
+  // Daily
+  {cat:'daily', name:'Make the bed', icon:'🛏️'},
+  {cat:'daily', name:'Wash dishes', icon:'🍽️'},
+  {cat:'daily', name:'Wipe kitchen counters', icon:'🧽'},
+  {cat:'daily', name:'Take out trash if full', icon:'🗑️'},
+  {cat:'daily', name:'Sweep floors', icon:'🧹'},
+  // Weekly
+  {cat:'weekly', name:'Vacuum all rooms', icon:'🌀'},
+  {cat:'weekly', name:'Mop floors', icon:'🫧'},
+  {cat:'weekly', name:'Clean bathrooms', icon:'🚿'},
+  {cat:'weekly', name:'Change bed sheets', icon:'🛏️'},
+  {cat:'weekly', name:'Clean fridge', icon:'❄️'},
+  {cat:'weekly', name:'Do laundry', icon:'👕'},
+  {cat:'weekly', name:'Water plants', icon:'🪴'},
+  // Monthly
+  {cat:'monthly', name:'Deep clean oven', icon:'🍳'},
+  {cat:'monthly', name:'Wash windows', icon:'🪟'},
+  {cat:'monthly', name:'Clean AC filters', icon:'💨'},
+  {cat:'monthly', name:'Check smoke detectors', icon:'🔥'},
+  {cat:'monthly', name:'Descale water heater', icon:'🚰'},
+  // Seasonal
+  {cat:'seasonal', name:'Clean behind appliances', icon:'🫙'},
+  {cat:'seasonal', name:'Check door/window seals', icon:'🚪'},
+  {cat:'seasonal', name:'Organize storage areas', icon:'📦'},
+  {cat:'seasonal', name:'Paint touch-ups', icon:'🖌️'},
+];
+
+function seedHomeChecklist() {
+  if(!D.homeChecklist || D.homeChecklist.length === 0) {
+    D.homeChecklist = DEFAULT_HOME_ITEMS.map(item => ({
+      id: uid(), name: item.name, cat: item.cat, icon: item.icon||'✓', checked: false, created: now()
+    }));
+  }
+}
+
+function addHomeItem() {
+  const name = document.getElementById('hci-name').value.trim();
+  if(!name) return;
+  if(!D.homeChecklist) D.homeChecklist = [];
+  D.homeChecklist.push({
+    id: uid(), name, cat: document.getElementById('hci-cat').value,
+    icon: '✓', checked: false, created: now()
+  });
+  document.getElementById('hci-name').value = '';
+  closePanel('home-item-panel');
+  scheduleSave(); renderHomeChecklist();
+}
+
+function toggleHomeItem(id) {
+  const item = (D.homeChecklist||[]).find(i=>i.id===id);
+  if(item) { item.checked = !item.checked; scheduleSave(); renderHomeChecklist(); }
+}
+
+function deleteHomeItem(id) {
+  D.homeChecklist = (D.homeChecklist||[]).filter(i=>i.id!==id);
+  scheduleSave(); renderHomeChecklist();
+}
+
+function resetHomeChecklist() {
+  if(!confirm('Uncheck all items?')) return;
+  (D.homeChecklist||[]).forEach(i=>i.checked=false);
+  scheduleSave(); renderHomeChecklist();
+}
+
+function renderHomeChecklist() {
+  if(!D.homeChecklist) D.homeChecklist = [];
+  seedHomeChecklist();
+
+  const total = D.homeChecklist.length;
+  const done = D.homeChecklist.filter(i=>i.checked).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  const ringEl = document.getElementById('home-progress-ring');
+  if(ringEl) ringEl.innerHTML = `
+    <div style="font-family:var(--r-serif);font-size:36px;color:var(--gold);line-height:1;">${pct}%</div>
+    <div style="flex:1;padding:0 16px;">
+      <div style="font-size:11px;color:var(--silver);margin-bottom:6px;">${done} of ${total} tasks complete</div>
+      <div class="prog-track" style="height:6px;"><div class="prog-fill" style="width:${pct}%;background:${pct===100?'var(--teal)':'var(--gold)'}"></div></div>
+    </div>
+    <div style="font-size:22px;">${pct===100?'🎉':'🏠'}</div>
+  `;
+
+  const cats = ['daily','weekly','monthly','seasonal'];
+  const catLabels = {daily:'Daily',weekly:'Weekly',monthly:'Monthly',seasonal:'Seasonal'};
+  const catIcons2 = {daily:'☀️',weekly:'📅',monthly:'🗓️',seasonal:'🍂'};
+  let html = '';
+  cats.forEach(cat => {
+    const items = D.homeChecklist.filter(i=>i.cat===cat);
+    if(!items.length) return;
+    const catDone = items.filter(i=>i.checked).length;
+    html += `<div class="checklist-section">
+      <div class="checklist-section-title">
+        <span>${catIcons2[cat]} ${catLabels[cat]}</span>
+        <span style="color:${catDone===items.length?'var(--teal)':'var(--fog)'}">${catDone}/${items.length}</span>
+      </div>`;
+    items.forEach(item => {
+      html += `<div class="checklist-item ${item.checked?'checked':''}" onclick="toggleHomeItem('${item.id}')">
+        <div class="check-box ${item.checked?'checked':''}"></div>
+        <span class="checklist-label">${esc(item.name)}</span>
+        <span class="checklist-freq" style="margin-right:6px;">${item.icon||''}</span>
+        <button class="btn-edit" style="opacity:0.3;font-size:10px;" onclick="event.stopPropagation();deleteHomeItem('${item.id}')">✕</button>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  const contentEl = document.getElementById('home-checklist-content');
+  if(contentEl) contentEl.innerHTML = html || '<div class="empty">No items. Add some above.</div>';
+}
+
+// ═══════════════════════════════════════════════════
+//  GROCERIES
+// ═══════════════════════════════════════════════════
+const groceryCatEmoji = {
+  produce:'🥦', dairy:'🥛', meat:'🥩', bakery:'🍞', pantry:'🥫',
+  frozen:'❄️', beverages:'🧃', snacks:'🍪', hygiene:'🧴', household:'🧹', other:'📦'
+};
+let groceryFilter = 'all';
+
+function addGroceryItem() {
+  const name = document.getElementById('gr-name').value.trim();
+  if(!name) return;
+  if(!D.groceries) D.groceries = [];
+  D.groceries.push({
+    id: uid(), name,
+    cat: document.getElementById('gr-cat').value,
+    qty: document.getElementById('gr-qty').value,
+    notes: document.getElementById('gr-notes').value,
+    inCart: false, created: now()
+  });
+  document.getElementById('gr-name').value = '';
+  document.getElementById('gr-qty').value = '';
+  document.getElementById('gr-notes').value = '';
+  closePanel('grocery-panel');
+  scheduleSave(); renderGroceries();
+}
+
+function toggleGroceryItem(id) {
+  const item = (D.groceries||[]).find(i=>i.id===id);
+  if(item) { item.inCart = !item.inCart; scheduleSave(); renderGroceries(); }
+}
+
+function deleteGroceryItem(id) {
+  D.groceries = (D.groceries||[]).filter(i=>i.id!==id);
+  scheduleSave(); renderGroceries();
+}
+
+function clearCartedItems() {
+  if(!confirm('Remove all checked-off items?')) return;
+  D.groceries = (D.groceries||[]).filter(i=>!i.inCart);
+  scheduleSave(); renderGroceries();
+}
+
+function renderGroceries() {
+  if(!D.groceries) D.groceries = [];
+  const items = D.groceries;
+
+  // Filter tabs
+  const cats = ['all', ...new Set(items.map(i=>i.cat))];
+  const filterEl = document.getElementById('grocery-filter-tabs');
+  if(filterEl) filterEl.innerHTML = cats.map(c=>`
+    <button class="btn btn-sm ${groceryFilter===c?'btn-gold':''}" onclick="setGroceryFilter('${c}')">
+      ${c==='all'?'All ('+items.filter(i=>!i.inCart).length+')' : (groceryCatEmoji[c]||'')+ ' '+c}
+    </button>`).join('');
+
+  const filtered = groceryFilter === 'all' ? items : items.filter(i=>i.cat===groceryFilter);
+  const pending = filtered.filter(i=>!i.inCart);
+  const inCart = filtered.filter(i=>i.inCart);
+
+  let html = '';
+  if(pending.length) {
+    html += `<div class="grocery-section"><div class="grocery-section-header"><span>Shopping List (${pending.length})</span></div>`;
+    html += pending.map(i=>`
+      <div class="grocery-item" onclick="toggleGroceryItem('${i.id}')">
+        <div class="check-box"></div>
+        <span style="font-size:18px;margin-right:4px;">${groceryCatEmoji[i.cat]||'📦'}</span>
+        <div style="flex:1;">
+          <div class="grocery-name">${esc(i.name)}</div>
+          ${i.notes?`<div style="font-size:9px;color:var(--fog);">${esc(i.notes)}</div>`:''}
+        </div>
+        ${i.qty?`<span class="grocery-qty">${esc(i.qty)}</span>`:''}
+        <button class="btn-edit" onclick="event.stopPropagation();deleteGroceryItem('${i.id}')">✕</button>
+      </div>`).join('');
+    html += '</div>';
+  }
+
+  if(inCart.length) {
+    html += `<div class="grocery-section" style="margin-top:16px;"><div class="grocery-section-header" style="color:var(--teal);">✓ In Cart (${inCart.length}) — <span style="cursor:pointer;text-decoration:underline;" onclick="clearCartedItems()">clear</span></div>`;
+    html += inCart.map(i=>`
+      <div class="grocery-item in-cart" onclick="toggleGroceryItem('${i.id}')">
+        <div class="check-box checked"></div>
+        <span style="font-size:18px;margin-right:4px;opacity:0.5;">${groceryCatEmoji[i.cat]||'📦'}</span>
+        <div class="grocery-name">${esc(i.name)}</div>
+        <button class="btn-edit" onclick="event.stopPropagation();deleteGroceryItem('${i.id}')">✕</button>
+      </div>`).join('');
+    html += '</div>';
+  }
+
+  if(!pending.length && !inCart.length) {
+    html = `<div class="empty"><div class="empty-icon">🛒</div>Your grocery list is empty. Add items above.</div>`;
+  }
+
+  const listEl = document.getElementById('grocery-list');
+  if(listEl) listEl.innerHTML = html;
+}
+
+function setGroceryFilter(cat) {
+  groceryFilter = cat;
+  renderGroceries();
+}
+
+// ═══════════════════════════════════════════════════
+//  CONFIGURATION — Task Areas
+// ═══════════════════════════════════════════════════
+function initConfigPage() {
+  const patEl = document.getElementById('cfg-pat');
+  const gidEl = document.getElementById('cfg-gid');
+  if(patEl) patEl.value = PAT || '';
+  if(gidEl) gidEl.value = GIST_ID || '';
+  renderConfigAreas();
+}
+
+function saveGitConfig() {
+  const pat = document.getElementById('cfg-pat').value.trim();
+  const gid = document.getElementById('cfg-gid').value.trim();
+  if(pat) { PAT = pat; localStorage.setItem('los-pat', PAT); }
+  if(gid) { GIST_ID = gid; localStorage.setItem('los-gist-id', GIST_ID); }
+  manualSync();
+}
+
+function addTaskArea() {
+  const name = document.getElementById('ca-name').value.trim();
+  if(!name) return;
+  if(!D.taskAreas) D.taskAreas = [];
+  const id = name.toLowerCase().replace(/\s+/g,'-');
+  if(D.taskAreas.find(a=>a.id===id)) { alert('Area with this name already exists.'); return; }
+  D.taskAreas.push({
+    id, name,
+    color: document.getElementById('ca-color').value,
+    icon: document.getElementById('ca-icon').value || '📌',
+    builtin: false
+  });
+  document.getElementById('ca-name').value = '';
+  document.getElementById('ca-icon').value = '';
+  closePanel('area-panel');
+  scheduleSave();
+  renderConfigAreas();
+  // Refresh task area dropdowns
+  rebuildTaskAreaDropdowns();
+}
+
+function deleteTaskArea(id) {
+  if(!confirm('Delete this area? Tasks using it will keep the old value.')) return;
+  D.taskAreas = (D.taskAreas||[]).filter(a=>a.id!==id);
+  scheduleSave();
+  renderConfigAreas();
+  rebuildTaskAreaDropdowns();
+}
+
+function renderConfigAreas() {
+  if(!D.taskAreas) D.taskAreas = [];
+  const el2 = document.getElementById('config-areas-list');
+  if(!el2) return;
+  el2.innerHTML = D.taskAreas.map(a=>`
+    <div class="config-area-item">
+      <div class="config-color-dot" style="background:var(--${a.color||'gold'})"></div>
+      <span style="font-size:16px;margin-right:4px;">${a.icon||'📌'}</span>
+      <span style="flex:1;font-size:13px;color:var(--paper);font-weight:500;">${esc(a.name)}</span>
+      <span class="chip chip-${a.color||'gold'}" style="font-size:8px;">${a.color}</span>
+      ${!a.builtin ? `<div class="row-actions" style="margin-left:8px;"><button class="btn-edit" style="color:var(--rose);" onclick="deleteTaskArea('${a.id}')">✕ Remove</button></div>` : '<span style="font-size:8px;color:var(--fog);font-family:var(--r-mono);margin-left:8px;">built-in</span>'}
+    </div>`).join('') || '<div class="empty">No areas defined.</div>';
+}
+
+function rebuildTaskAreaDropdowns() {
+  const areas = D.taskAreas || [];
+  const opts = areas.map(a=>`<option value="${a.id}">${a.icon||''} ${a.name}</option>`).join('');
+  ['t-area'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(sel) { const cur=sel.value; sel.innerHTML=opts; sel.value=cur; }
+  });
+}
 </script>
-</body>
 </html>
