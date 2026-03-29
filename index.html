@@ -1214,6 +1214,19 @@ function defaultData() {
 
 let D = defaultData();
 
+// ─── Local persistence (instant, survives reload) ───
+const LOCAL_KEY = 'los-data';
+function saveLocal() {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(D)); } catch(e) { /* quota exceeded */ }
+}
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    if (raw) { const parsed = JSON.parse(raw); return Object.assign(defaultData(), parsed); }
+  } catch(e) { /* corrupt */ }
+  return null;
+}
+
 // ─── Sync bar ───
 function showSyncBar(on) { const b=document.getElementById('sync-bar'); if(b)b.classList.toggle('active',on); }
 
@@ -1285,16 +1298,28 @@ async function findOrCreateGist() {
 async function pullData() {
   const g = await gistGet(GIST_ID);
   const raw = g.files['life-os.json']?.content || '{}';
-  const remote = JSON.parse(raw);
-  D = Object.assign(defaultData(), remote);
+  const remote = Object.assign(defaultData(), JSON.parse(raw));
+  const local = loadLocal();
+  // Use whichever dataset was modified more recently
+  if (local && local.meta && local.meta.lastModified &&
+      (!remote.meta.lastModified || local.meta.lastModified > remote.meta.lastModified)) {
+    D = local;
+  } else {
+    D = remote;
+  }
+  saveLocal();
 }
 
 async function pushData() {
   D.meta.lastSync = now();
+  D.meta.lastModified = D.meta.lastModified || now();
   await gistPatch(GIST_ID, JSON.stringify(D,null,2));
+  saveLocal();
 }
 
 function scheduleSave() {
+  D.meta.lastModified = now();
+  saveLocal();
   clearTimeout(syncTimer);
   syncTimer = setTimeout(()=>syncNow('push'), SYNC_DEBOUNCE);
 }
@@ -1352,11 +1377,23 @@ function launchApp() {
   loadNews();
 }
 
+window.addEventListener('beforeunload', () => { saveLocal(); });
+
 window.addEventListener('DOMContentLoaded', () => {
+  // Load from localStorage first for instant display
+  const cached = loadLocal();
+  if (cached) D = cached;
+
   if(PAT) {
     setSyncStatus('syncing','Loading your data…');
     findOrCreateGist().then(pullData).then(()=>launchApp()).catch(e=>{
-      document.getElementById('setup-screen').style.display = 'flex';
+      // If gist fails but we have local data, launch anyway
+      if (cached && cached.meta && cached.meta.seeded) {
+        launchApp();
+        setSyncStatus('err','Offline — using local data');
+      } else {
+        document.getElementById('setup-screen').style.display = 'flex';
+      }
       console.error(e);
     });
   } else {
@@ -1735,8 +1772,12 @@ function renderHabits() {
   }).join(''):empty('No habits yet. Add your first one above.'));
 
   const cells=Array(28).fill(0).map((_,i)=>{
-    const s=Math.floor(Math.random()*5);
-    return `<div class="hm-cell hm-${s}" title="Day ${i+1}"></div>`;
+    const d=new Date(); d.setDate(d.getDate()-27+i);
+    const dk=d.toISOString().slice(0,10);
+    const count=D.habits.filter(h=>h.log&&h.log[dk]).length;
+    const total=D.habits.length||1;
+    const s=Math.min(4,Math.round(count/total*4));
+    return `<div class="hm-cell hm-${s}" title="${dk}: ${count}/${D.habits.length} habits"></div>`;
   }).join('');
   el('habit-heatmap',cells);
 
@@ -2121,7 +2162,7 @@ function renderAll() {
 
 // ─── SEED SAMPLE DATA ───
 function seedIfEmpty() {
-  if(D.tasks.length||D.habits.length) return;
+  if(D.meta.seeded) return;
   D.tasks=[
     {id:uid(),text:'Deploy WhatsApp bot to Railway',area:'tech',prio:'high',bucket:'today',due:today(),notes:'Twilio sandbox fix needed',done:false,created:now()},
     {id:uid(),text:'Review Deye Cloud API endpoints',area:'tech',prio:'med',bucket:'today',due:today(),notes:'',done:false,created:now()},
@@ -2166,6 +2207,7 @@ function seedIfEmpty() {
     {id:uid(),name:'Your Father',role:'father',birthday:'',phone:'',anniversary:'',lovelang:'time',notes:'Quality time is what he values most. Sit with him, listen to him, learn from him.',created:now()},
     {id:uid(),name:'Your Wife',role:'wife',birthday:'',phone:'',anniversary:'',lovelang:'words',notes:'She needs to feel seen and appreciated. Tell her what she means to you, often.',created:now()},
   ];
+  D.meta.seeded = true;
   scheduleSave(); renderAll();
 }
 </script>
