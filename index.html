@@ -1671,13 +1671,14 @@ function renderOverview() {
   const lastH=D.health[D.health.length-1];
   el('ov-energy',lastH?.energy?lastH.energy+`<span style="font-size:18px;color:var(--fog)">/10</span>`:'—');
 
-  // Balance bars — calculated from actual data
-  const taskScore=todayTasks.length?Math.round(doneTasks.length/todayTasks.length*100):100;
-  const habitScore=D.habits.length?Math.round(D.habits.filter(h=>h.log&&h.log[today()]).length/D.habits.length*100):100;
-  const healthScore=lastH?.energy?lastH.energy*10:70;
-  const finScore=inc>0?Math.min(100,Math.round((inc-exp)/inc*100+50)):50;
-  const goalScore=D.goals.filter(g=>!g.done).length?Math.round(D.goals.filter(g=>!g.done).reduce((a,b)=>a+(b.progress||0),0)/D.goals.filter(g=>!g.done).length):100;
-  const socialScore=D.journal.filter(j=>j.date===today()).length?80:50;
+  // Balance bars — calculated from actual data (0 when no data exists)
+  const taskScore=todayTasks.length?Math.round(doneTasks.length/todayTasks.length*100):0;
+  const habitScore=D.habits.length?Math.round(D.habits.filter(h=>h.log&&h.log[today()]).length/D.habits.length*100):0;
+  const healthScore=lastH?.energy?lastH.energy*10:0;
+  const finScore=inc>0?Math.min(100,Math.round((inc-exp)/inc*100)):0;
+  const activeGoals=D.goals.filter(g=>!g.done);
+  const goalScore=activeGoals.length?Math.round(activeGoals.reduce((a,b)=>a+(b.progress||0),0)/activeGoals.length):0;
+  const socialScore=D.journal.filter(j=>j.date===today()).length>0?80:0;
 
   const domains=[['Health','var(--teal)',healthScore],['Tasks','var(--gold)',taskScore],['Finance','var(--sky)',finScore],['Habits','var(--violet)',habitScore],['Goals','var(--ember)',goalScore],['Social','#ff9aaa',socialScore]];
   el('ov-balance',domains.map(([l,c,v])=>`
@@ -1686,18 +1687,28 @@ function renderOverview() {
       <div class="prog-track"><div class="prog-fill" style="width:${v}%;background:${c}"></div></div>
     </div>`).join(''));
 
-  // Sparkline
-  const vals=[3,5,4,7,6,8,5,9,7,6,8,7,9,doneTasks.length||1];
-  const mx=Math.max(...vals,1);
-  el('ov-sparkline',vals.map((v,i)=>`<div class="sp-bar ${i===vals.length-1?'hi':''}" style="height:${Math.max(6,(v/mx)*100)}%;"></div>`).join(''));
+  // Sparkline — real 14-day activity (tasks completed + habits done + journal + health logged per day)
+  const sparkVals=Array(14).fill(0).map((_,i)=>{
+    const d=new Date(); d.setDate(d.getDate()-13+i);
+    const dk=d.toISOString().slice(0,10);
+    let count=0;
+    count+=D.tasks.filter(t=>t.done&&t.due===dk).length;
+    count+=D.habits.filter(h=>h.log&&h.log[dk]).length;
+    count+=D.journal.filter(j=>j.date===dk).length;
+    count+=D.health.filter(h=>h.date===dk).length;
+    count+=D.focusSessions.filter(s=>s.date===dk).length;
+    return count;
+  });
+  const mx=Math.max(...sparkVals,1);
+  el('ov-sparkline',sparkVals.map((v,i)=>`<div class="sp-bar ${i===13?'hi':''}" style="height:${Math.max(6,(v/mx)*100)}%;"></div>`).join(''));
 
   // High priority tasks
   const prios=D.tasks.filter(t=>!t.done&&t.prio==='high').slice(0,5);
   el('ov-priorities',prios.length?prios.map(taskHTML).join(''):empty('No high-priority tasks. 🎉'));
 
-  // Goals
-  const activeGoals=D.goals.filter(g=>!g.done).slice(0,4);
-  el('ov-goals',activeGoals.length?activeGoals.map(g=>`
+  // Goals (activeGoals already computed above)
+  const displayGoals=activeGoals.slice(0,4);
+  el('ov-goals',displayGoals.length?displayGoals.map(g=>`
     <div class="prog-wrap">
       <div class="prog-header">
         <span style="font-size:11px;color:var(--silver)">${esc(g.title)}</span>
@@ -1730,8 +1741,10 @@ function renderOverview() {
   const badge=document.getElementById('badge-tasks');
   if(badge){ badge.textContent=pending; badge.style.display=pending?'':'none'; }
 
-  // Life score
-  const lifeScore=Math.round((taskScore+habitScore+goalScore+healthScore)/4);
+  // Life score — average of domains that have data, or 0
+  const activeScores=[taskScore,habitScore,goalScore,healthScore,finScore,socialScore];
+  const nonZeroScores=activeScores.filter(s=>s>0);
+  const lifeScore=nonZeroScores.length?Math.round(nonZeroScores.reduce((a,b)=>a+b,0)/nonZeroScores.length):0;
   el('life-score',lifeScore);
   el('score-bars',`
     <div class="score-bar-row"><div class="score-bar-label">Tasks</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${taskScore}%;background:var(--gold)"></div></div></div>
@@ -2087,10 +2100,28 @@ function loadNews() {
 }
 
 function refreshNews() {
-  newsLoaded=false;
   const els=['news-breaking','news-trending','news-markets','news-tech','news-science','news-searches'];
   els.forEach(id=>el(id,'<div class="news-loading">Refreshing…</div>'));
-  setTimeout(()=>{ newsLoaded=false; loadNews(); }, 400);
+  setTimeout(()=>{
+    // Shuffle data to simulate a refresh with updated timestamps
+    const data=JSON.parse(JSON.stringify(FALLBACK_NEWS));
+    const units=['s','m','h'];
+    data.breaking.forEach(n=>{ n.time=Math.floor(Math.random()*59+1)+units[Math.floor(Math.random()*3)]+' ago'; });
+    data.tech.forEach(n=>{ n.time=Math.floor(Math.random()*59+1)+units[Math.floor(Math.random()*3)]+' ago'; });
+    data.science.forEach(n=>{ n.time=Math.floor(Math.random()*59+1)+units[Math.floor(Math.random()*3)]+' ago'; });
+    // Randomize market changes slightly
+    data.markets.forEach(m=>{
+      const delta=(Math.random()*2-1).toFixed(1);
+      m.change=(delta>=0?'+':'')+delta+'%';
+      m.up=delta>=0;
+    });
+    // Shuffle trending counts
+    data.trending.forEach(t=>{
+      const num=(Math.random()*3+0.1).toFixed(1);
+      t.count=num+'M posts';
+    });
+    renderNewsData(data);
+  }, 600);
 }
 
 function renderNewsData(data) {
