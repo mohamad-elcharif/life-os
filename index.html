@@ -803,14 +803,6 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
       <div class="sub">Mohamad · Command Center</div>
     </div>
 
-    <div class="sidebar-score">
-      <div class="score-label">Life Score</div>
-      <div class="score-ring">
-        <div class="score-num" id="life-score">—</div>
-        <div class="score-bars" id="score-bars"></div>
-      </div>
-    </div>
-
     <nav class="sidebar-nav">
       <div class="nav-section">Core</div>
       <div class="nav-item active" onclick="goTo('overview',this)"><span class="icon">◈</span> Overview</div>
@@ -899,13 +891,6 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
         </div>
         <div class="ov-mid">
           <div>
-            <div class="card" style="margin-bottom:14px;">
-              <div class="card-eyebrow" style="margin-bottom:14px;">Life Balance</div>
-              <div id="ov-balance"></div>
-              <div class="divider"></div>
-              <div class="card-eyebrow" style="margin-bottom:8px;">14-Day Activity</div>
-              <div class="sparkline" id="ov-sparkline"></div>
-            </div>
             <div class="card">
               <div class="card-eyebrow" style="margin-bottom:12px;">High Priority Tasks</div>
               <div id="ov-priorities"></div>
@@ -1362,7 +1347,7 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
             <div class="card-eyebrow" style="margin-bottom:10px;">Calculation Method</div>
             <div style="font-size:11px;color:var(--silver);line-height:1.8;">
               <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Location</span> — Tripoli, Lebanon (34.43°N, 35.85°E)</div>
-              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Method</span> — Muslim World League</div>
+              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Method</span> — Egyptian General Authority of Survey</div>
               <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Madhab</span> — Shafi'i</div>
               <div><span style="color:var(--gold);font-family:var(--r-mono);">Source</span> — Aladhan API (live)</div>
             </div>
@@ -1382,13 +1367,7 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
             <button class="btn btn-sm" onclick="clearNote()">✕ Clear</button>
           </div>
         </div>
-        <div style="display:flex;gap:0;margin-bottom:0;">
-          <button class="note-tab active" id="ntab-0" onclick="switchNote(0)">Note 1</button>
-          <button class="note-tab" id="ntab-1" onclick="switchNote(1)">Note 2</button>
-          <button class="note-tab" id="ntab-2" onclick="switchNote(2)">Note 3</button>
-          <button class="note-tab" id="ntab-3" onclick="switchNote(3)">Clipboard</button>
-        </div>
-        <textarea class="notepad-area" id="notepad-textarea" placeholder="Start typing… your note is auto-saved and synced. Copy this text on any device using the button above." oninput="onNoteInput()"></textarea>
+        <textarea class="notepad-area" id="notepad-textarea" placeholder="Start typing… your clipboard is auto-saved and synced. Copy this text on any device using the button above." oninput="onNoteInput()"></textarea>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
           <span style="font-size:9px;color:var(--fog);font-family:var(--r-mono);">Auto-saved to your GitHub Gist — accessible on any device</span>
           <button class="btn btn-sm btn-ghost" onclick="copyNote()">Copy to clipboard</button>
@@ -1680,8 +1659,14 @@ function setSyncStatus(s, msg) {
 // ═══════════════════════════════════════════════════
 
 async function workerFetch(path, opts = {}) {
-  const r = await fetch(EFFECTIVE_WORKER_URL() + path, {
+  // Append cache-buster to GET requests so mobile browsers never serve stale data
+  const sep = path.includes('?') ? '&' : '?';
+  const url = opts.method && opts.method !== 'GET'
+    ? EFFECTIVE_WORKER_URL() + path
+    : EFFECTIVE_WORKER_URL() + path + sep + '_t=' + Date.now();
+  const r = await fetch(url, {
     ...opts,
+    cache: 'no-store',
     headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }
   });
   if (!r.ok) {
@@ -1707,18 +1692,9 @@ async function pullData() {
   const data = await workerFetch('/gist' + (GIST_ID ? '?id=' + GIST_ID : ''));
   GIST_ID = data.id;
   localStorage.setItem('los-gist-id', GIST_ID);
-  const remote = Object.assign(defaultData(), JSON.parse(data.content || '{}'));
-  const local  = loadLocal();
-  // Only keep local data if there are unpushed changes (modified after last sync).
-  // Otherwise remote (Gist) is the source of truth.
-  const hasUnpushedLocal = local && local.meta &&
-    local.meta.lastModified && local.meta.lastSync &&
-    local.meta.lastModified > local.meta.lastSync;
-  if (hasUnpushedLocal) {
-    D = local;
-  } else {
-    D = remote;
-  }
+  // Remote (Gist) is ALWAYS the source of truth when we can reach the server.
+  // This prevents stale localStorage on other devices from overriding real data.
+  D = Object.assign(defaultData(), JSON.parse(data.content || '{}'));
   saveLocal();
 }
 
@@ -2087,36 +2063,7 @@ function renderOverview() {
   const lastH=D.health[D.health.length-1];
   el('ov-energy',lastH?.energy?lastH.energy+`<span style="font-size:18px;color:var(--fog)">/10</span>`:'—');
 
-  // Balance bars — calculated from actual data (0 when no data exists)
-  const taskScore=todayTasks.length?Math.round(doneTasks.length/todayTasks.length*100):0;
-  const habitScore=D.habits.length?Math.round(D.habits.filter(h=>h.log&&h.log[today()]).length/D.habits.length*100):0;
-  const healthScore=lastH?.energy?lastH.energy*10:0;
-  const finScore=inc>0?Math.min(100,Math.round((inc-exp)/inc*100)):0;
   const activeGoals=D.goals.filter(g=>!g.done);
-  const goalScore=activeGoals.length?Math.round(activeGoals.reduce((a,b)=>a+(b.progress||0),0)/activeGoals.length):0;
-  const socialScore=D.journal.filter(j=>j.date===today()).length>0?80:0;
-
-  const domains=[['Health','var(--teal)',healthScore],['Tasks','var(--gold)',taskScore],['Finance','var(--sky)',finScore],['Habits','var(--violet)',habitScore],['Goals','var(--ember)',goalScore],['Social','#ff9aaa',socialScore]];
-  el('ov-balance',domains.map(([l,c,v])=>`
-    <div class="prog-wrap">
-      <div class="prog-header"><span>${l}</span><span>${v}%</span></div>
-      <div class="prog-track"><div class="prog-fill" style="width:${v}%;background:${c}"></div></div>
-    </div>`).join(''));
-
-  // Sparkline — real 14-day activity (tasks completed + habits done + journal + health logged per day)
-  const sparkVals=Array(14).fill(0).map((_,i)=>{
-    const d=new Date(); d.setDate(d.getDate()-13+i);
-    const dk=d.toISOString().slice(0,10);
-    let count=0;
-    count+=D.tasks.filter(t=>t.done&&t.due===dk).length;
-    count+=D.habits.filter(h=>h.log&&h.log[dk]).length;
-    count+=D.journal.filter(j=>j.date===dk).length;
-    count+=D.health.filter(h=>h.date===dk).length;
-    count+=D.focusSessions.filter(s=>s.date===dk).length;
-    return count;
-  });
-  const mx=Math.max(...sparkVals,1);
-  el('ov-sparkline',sparkVals.map((v,i)=>`<div class="sp-bar ${i===13?'hi':''}" style="height:${Math.max(6,(v/mx)*100)}%;"></div>`).join(''));
 
   // High priority tasks
   const prios=D.tasks.filter(t=>!t.done&&t.prio==='high').slice(0,5);
@@ -2156,18 +2103,6 @@ function renderOverview() {
   const pending=D.tasks.filter(t=>t.bucket==='today'&&!t.done).length;
   const badge=document.getElementById('badge-tasks');
   if(badge){ badge.textContent=pending; badge.style.display=pending?'':'none'; }
-
-  // Life score — average of domains that have data, or 0
-  const activeScores=[taskScore,habitScore,goalScore,healthScore,finScore,socialScore];
-  const nonZeroScores=activeScores.filter(s=>s>0);
-  const lifeScore=nonZeroScores.length?Math.round(nonZeroScores.reduce((a,b)=>a+b,0)/nonZeroScores.length):0;
-  el('life-score',lifeScore);
-  el('score-bars',`
-    <div class="score-bar-row"><div class="score-bar-label">Tasks</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${taskScore}%;background:var(--gold)"></div></div></div>
-    <div class="score-bar-row"><div class="score-bar-label">Habits</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${habitScore}%;background:var(--teal)"></div></div></div>
-    <div class="score-bar-row"><div class="score-bar-label">Goals</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${goalScore}%;background:var(--sky)"></div></div></div>
-    <div class="score-bar-row"><div class="score-bar-label">Health</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${healthScore}%;background:var(--ember)"></div></div></div>
-  `);
 }
 
 // ─── TASKS ───
@@ -2677,7 +2612,8 @@ async function loadPrayerTimes() {
   const mm = String(d.getMonth()+1).padStart(2,'0');
   const yyyy = d.getFullYear();
   // Aladhan API: date is a path parameter, not a query parameter
-  const url = `https://api.aladhan.com/v1/timingsByCity/${dd}-${mm}-${yyyy}?city=Tripoli&country=Lebanon&method=3&school=0`;
+  // Use exact coordinates for Tripoli, Lebanon and Egyptian General Authority method (common in Levant)
+  const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=34.4367&longitude=35.8497&method=5&school=0`;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -2708,7 +2644,7 @@ async function loadPrayerTimes() {
 }
 
 // ── Astronomical prayer time calculator for Tripoli, Lebanon ──
-// Method: Muslim World League  |  Fajr: 18°  Isha: 17°
+// Method: Egyptian General Authority  |  Fajr: 19.5°  Isha: 17.5°
 // Lat: 34.4367  Lng: 35.8497  TZ offset: +2 (winter) / +3 (summer, DST)
 function computePrayerTimesLocally(date) {
   const lat = 34.4367, lng = 35.8497;
@@ -2738,12 +2674,12 @@ function computePrayerTimesLocally(date) {
     return sunAngleTime(angle, false);
   }
 
-  const fajr    = sunAngleTime(-18, true);
+  const fajr    = sunAngleTime(-19.5, true);   // Egyptian method: 19.5°
   const sunrise = sunAngleTime(-0.833, true);
   const dhuhr   = 12 - EqT - lng/15 + tzOffsetHours;
-  const asr     = asrTime(1); // Shafi
+  const asr     = asrTime(1); // Shafi'i
   const maghrib = sunAngleTime(-0.833, false);
-  const isha    = sunAngleTime(-17, false);
+  const isha    = sunAngleTime(-17.5, false);  // Egyptian method: 17.5°
 
   function toHHMM(h) {
     if (h === null) return '00:00';
@@ -2935,33 +2871,21 @@ function renderPrayerWeek() {
 // ═══════════════════════════════════════════════════
 //  NOTEPAD
 // ═══════════════════════════════════════════════════
-let currentNoteIndex = 0;
+// Clipboard is always stored at index 3 in D.notes
+const CLIPBOARD_INDEX = 3;
 
 function initNotepad() {
   if(!D.notes) D.notes = ['','','',''];
   while(D.notes.length < 4) D.notes.push('');
-  switchNote(currentNoteIndex);
-}
-
-function switchNote(idx) {
-  // Save current before switching
   const ta = document.getElementById('notepad-textarea');
-  if(ta && D.notes) D.notes[currentNoteIndex] = ta.value;
-  currentNoteIndex = idx;
-  if(!D.notes) D.notes = ['','','',''];
-  if(ta) ta.value = D.notes[idx] || '';
-  // Update tabs
-  for(let i=0;i<4;i++){
-    const tab = document.getElementById('ntab-'+i);
-    if(tab) tab.classList.toggle('active', i===idx);
-  }
+  if(ta) ta.value = D.notes[CLIPBOARD_INDEX] || '';
   updateNoteCount();
 }
 
 function onNoteInput() {
   const ta = document.getElementById('notepad-textarea');
   if(ta && D.notes) {
-    D.notes[currentNoteIndex] = ta.value;
+    D.notes[CLIPBOARD_INDEX] = ta.value;
     updateNoteCount();
     scheduleSave();
   }
@@ -2994,7 +2918,7 @@ function clearNote() {
   if(!confirm('Clear this note?')) return;
   const ta = document.getElementById('notepad-textarea');
   if(ta) ta.value = '';
-  if(D.notes) D.notes[currentNoteIndex] = '';
+  if(D.notes) D.notes[CLIPBOARD_INDEX] = '';
   updateNoteCount();
   scheduleSave();
 }
