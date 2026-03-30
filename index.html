@@ -770,31 +770,22 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
 <div id="sync-bar"></div>
 <div class="copy-toast" id="copy-toast">✓ Copied to clipboard!</div>
 
-<!-- ══════════════ SETUP SCREEN ══════════════ -->
+<!-- ══════════════ CONNECTING SCREEN ══════════════ -->
 <div id="setup-screen">
   <div class="setup-box">
-    <div class="setup-wordmark">Life <span>OS</span></div>
-    <div class="setup-sub">Your world-class command center · Synced via GitHub</div>
-
-    <div class="setup-step">
-      <div class="setup-step-num">Step 1 — Create a GitHub PAT</div>
-      <p>Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
-      Select <strong>Classic token</strong> → tick <strong>gist</strong> scope only → click <strong>Generate</strong><br>
-      Copy the token (starts with <code>ghp_</code>)</p>
+    <div class="setup-wordmark">Life <em>OS</em></div>
+    <div class="setup-sub">Mohamad · Command Center</div>
+    <div style="margin-top:32px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:16px;">🔄</div>
+      <div style="font-size:14px;color:var(--cream);font-weight:600;margin-bottom:8px;" id="connect-status">Connecting to your data…</div>
+      <div style="font-size:11px;color:var(--fog);font-family:var(--r-mono);" id="connect-sub">Reaching the sync server</div>
     </div>
-    <div class="setup-step">
-      <div class="setup-step-num">Step 2 — Paste it here</div>
-      <div class="field">
-        <label>GitHub Personal Access Token</label>
-        <input class="input" id="pat-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-      </div>
-      <div class="setup-error" id="pat-error"></div>
-    </div>
-    <button class="btn btn-gold" style="width:100%;margin-top:8px;padding:12px;font-size:12px;" onclick="initWithPAT()">
-      Connect &amp; Launch →
+    <div class="setup-error" id="pat-error" style="margin-top:20px;"></div>
+    <button class="btn btn-gold" id="retry-btn" style="width:100%;margin-top:16px;padding:12px;font-size:12px;display:none;" onclick="bootApp()">
+      ↻ Retry Connection
     </button>
-    <p style="font-size:9px;color:var(--fog);margin-top:14px;line-height:1.8;font-family:var(--r-mono);">
-      Token stored in localStorage only · Sent exclusively to api.github.com · Zero third-party servers.
+    <p style="font-size:9px;color:var(--fog);margin-top:20px;line-height:1.8;font-family:var(--r-mono);text-align:center;">
+      Secured via Cloudflare Worker · No credentials stored in browser · Zero third-party servers
     </p>
   </div>
 </div>
@@ -1557,14 +1548,14 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
 
         <!-- GitHub Sync -->
         <div class="config-card">
-          <div style="font-size:14px;font-weight:700;color:var(--cream);margin-bottom:4px;">GitHub Sync</div>
-          <div style="font-size:10px;color:var(--fog);font-family:var(--r-mono);margin-bottom:14px;">Your data syncs to a private GitHub Gist across all devices</div>
+          <div style="font-size:14px;font-weight:700;color:var(--cream);margin-bottom:4px;">Sync Configuration</div>
+          <div style="font-size:10px;color:var(--fog);font-family:var(--r-mono);margin-bottom:14px;">Data syncs via your Cloudflare Worker — credentials never leave the server</div>
           <div class="g2">
-            <div class="field"><label>GitHub PAT</label><input class="input" id="cfg-pat" type="password" placeholder="ghp_…"></div>
-            <div class="field"><label>Gist ID (auto)</label><input class="input" id="cfg-gid" placeholder="auto-detected"></div>
+            <div class="field"><label>Worker URL</label><input class="input" id="cfg-worker" placeholder="https://life-os-sync.your-subdomain.workers.dev"></div>
+            <div class="field"><label>Gist ID (auto-detected)</label><input class="input" id="cfg-gid" placeholder="filled automatically on first sync" readonly style="opacity:0.6;cursor:default;"></div>
           </div>
           <div class="form-row" style="margin-top:12px;">
-            <button class="btn btn-gold btn-sm" onclick="saveGitConfig()">Save & Sync</button>
+            <button class="btn btn-gold btn-sm" onclick="saveWorkerConfig()">Save & Reconnect</button>
             <button class="btn btn-danger btn-sm" onclick="if(confirm('Reset ALL local data?')){localStorage.clear();location.reload();}">⚠ Reset Everything</button>
           </div>
         </div>
@@ -1607,7 +1598,18 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
 const GIST_DESC = 'life-os-data-v2';
 const SYNC_DEBOUNCE = 2500;
 
-let PAT = localStorage.getItem('los-pat') || '';
+// ── Cloudflare Worker proxy URL ──────────────────────────────────────────────
+// Your PAT lives in the Worker's environment variables on Cloudflare's servers.
+// It never touches the browser. Replace this URL after deploying worker.js.
+const WORKER_URL = 'https://life-os-sync.mohamad-s-elcharif.workers.dev';
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Allow overriding WORKER_URL at runtime via config page (without editing the file)
+const _workerOverride = localStorage.getItem('los-worker-url');
+// WORKER_URL is declared as const above; we use a live getter via a wrapper
+const EFFECTIVE_WORKER_URL = () => localStorage.getItem('los-worker-url') || WORKER_URL;
+
+// Gist ID is not a secret — safe to keep in localStorage as a stable identifier
 let GIST_ID = localStorage.getItem('los-gist-id') || '';
 let syncTimer = null;
 let syncStatus = 'idle';
@@ -1669,66 +1671,41 @@ function setSyncStatus(s, msg) {
 }
 
 // ═══════════════════════════════════════════════════
-//  GITHUB GIST API
+//  SYNC API  —  all calls go to the Cloudflare Worker.
+//  The Worker holds the GitHub PAT in env vars server-side.
+//  The browser never sees the token.
 // ═══════════════════════════════════════════════════
-async function gistGet(id) {
-  const r = await fetch(`https://api.github.com/gists/${id}`, {
-    headers:{ Authorization:`token ${PAT}`, Accept:'application/vnd.github.v3+json' }
+
+async function workerFetch(path, opts = {}) {
+  const r = await fetch(EFFECTIVE_WORKER_URL() + path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }
   });
-  if(!r.ok) throw new Error(`Gist GET failed: ${r.status}`);
+  if (!r.ok) {
+    const msg = await r.text().catch(() => r.status);
+    throw new Error(msg || r.status);
+  }
   return r.json();
 }
 
-async function gistPatch(id, content) {
-  const r = await fetch(`https://api.github.com/gists/${id}`, {
-    method:'PATCH',
-    headers:{ Authorization:`token ${PAT}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({ files:{ 'life-os.json':{ content } } })
-  });
-  if(!r.ok) throw new Error(`Gist PATCH failed: ${r.status}`);
-  return r.json();
-}
-
-async function gistCreate() {
-  const r = await fetch('https://api.github.com/gists', {
-    method:'POST',
-    headers:{ Authorization:`token ${PAT}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({
-      description: GIST_DESC, public: false,
-      files:{ 'life-os.json':{ content: JSON.stringify(defaultData(),null,2) } }
-    })
-  });
-  if(!r.ok) throw new Error(`Gist CREATE failed: ${r.status}`);
-  return r.json();
-}
-
-async function listGists() {
-  const r = await fetch('https://api.github.com/gists?per_page=100', {
-    headers:{ Authorization:`token ${PAT}` }
-  });
-  if(!r.ok) throw new Error(`List gists failed: ${r.status}`);
-  return r.json();
-}
+// Worker routes:
+//   GET  /gist          → returns { id, content }  (find-or-create)
+//   PUT  /gist          → body: { content }  (full save)
 
 async function findOrCreateGist() {
-  if(GIST_ID) {
-    try { await gistGet(GIST_ID); return GIST_ID; } catch(e) { GIST_ID=''; }
-  }
-  const list = await listGists();
-  const existing = list.find(g=>g.description===GIST_DESC);
-  if(existing){ GIST_ID=existing.id; localStorage.setItem('los-gist-id',GIST_ID); return GIST_ID; }
-  const created = await gistCreate();
-  GIST_ID = created.id;
-  localStorage.setItem('los-gist-id',GIST_ID);
+  if (GIST_ID) return GIST_ID;          // already known this session
+  const data = await workerFetch('/gist');
+  GIST_ID = data.id;
+  localStorage.setItem('los-gist-id', GIST_ID);
   return GIST_ID;
 }
 
 async function pullData() {
-  const g = await gistGet(GIST_ID);
-  const raw = g.files['life-os.json']?.content || '{}';
-  const remote = Object.assign(defaultData(), JSON.parse(raw));
-  const local = loadLocal();
-  // Use whichever dataset was modified more recently
+  const data = await workerFetch('/gist' + (GIST_ID ? '?id=' + GIST_ID : ''));
+  GIST_ID = data.id;
+  localStorage.setItem('los-gist-id', GIST_ID);
+  const remote = Object.assign(defaultData(), JSON.parse(data.content || '{}'));
+  const local  = loadLocal();
   if (local && local.meta && local.meta.lastModified &&
       (!remote.meta.lastModified || local.meta.lastModified > remote.meta.lastModified)) {
     D = local;
@@ -1739,9 +1716,13 @@ async function pullData() {
 }
 
 async function pushData() {
-  D.meta.lastSync = now();
+  D.meta.lastSync     = now();
   D.meta.lastModified = D.meta.lastModified || now();
-  await gistPatch(GIST_ID, JSON.stringify(D,null,2));
+  if (!GIST_ID) await findOrCreateGist();
+  await workerFetch('/gist', {
+    method: 'PUT',
+    body: JSON.stringify({ id: GIST_ID, content: JSON.stringify(D, null, 2) })
+  });
   saveLocal();
 }
 
@@ -1749,91 +1730,83 @@ function scheduleSave() {
   D.meta.lastModified = now();
   saveLocal();
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(()=>syncNow('push'), SYNC_DEBOUNCE);
+  syncTimer = setTimeout(() => syncNow('push'), SYNC_DEBOUNCE);
 }
 
-async function syncNow(mode='both') {
-  if(!PAT) return; // no token — skip silently
-  setSyncStatus('syncing','Syncing…');
+async function syncNow(mode = 'both') {
+  setSyncStatus('syncing', 'Syncing…');
   try {
-    if(!GIST_ID) await findOrCreateGist();
-    if(mode==='pull'||mode==='both') await pullData();
-    if(mode==='push'||mode==='both') await pushData();
-    setSyncStatus('ok',`Synced ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`);
+    if (mode === 'pull' || mode === 'both') await pullData();
+    if (mode === 'push' || mode === 'both') await pushData();
+    setSyncStatus('ok', `Synced ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`);
     renderAll();
-  } catch(e) {
-    setSyncStatus('err','Sync failed — '+e.message);
-    console.warn('[LifeOS] Sync failed:', e.message); // warn not error — expected when offline
+  } catch (e) {
+    setSyncStatus('err', 'Sync failed — ' + e.message);
+    if (!e.message.includes('fetch')) console.warn('[LifeOS] Sync error:', e.message);
   }
 }
 
 async function manualSync() { await syncNow('both'); }
 
-async function initWithPAT() {
-  const token = document.getElementById('pat-input').value.trim();
-  const errEl = document.getElementById('pat-error');
-  errEl.style.display = 'none';
-  if(!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-    errEl.textContent = 'Token should start with ghp_ or github_pat_. Please check and retry.';
-    errEl.style.display = 'block'; return;
-  }
-  PAT = token; localStorage.setItem('los-pat', PAT);
-  setSyncStatus('syncing','Connecting…');
-  const btn = document.querySelector('#setup-screen .btn-gold');
-  btn.textContent = 'Connecting…';
-  try {
-    await findOrCreateGist();
-    await pullData();
-    await pushData();
-    launchApp();
-  } catch(e) {
-    errEl.textContent = 'Connection failed: ' + e.message + '. Check your token has gist scope.';
-    errEl.style.display = 'block';
-    btn.textContent = 'Connect & Launch →';
-    setSyncStatus('err','Failed');
-  }
-}
-
 function launchApp() {
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  setSyncStatus('ok','Connected');
+  setSyncStatus('ok', 'Connected');
   updateTopbar();
   setInterval(updateTopbar, 30000);
-  setInterval(()=>syncNow('pull'), 60000);
+  setInterval(() => syncNow('pull'), 60000);
   renderAll();
   seedIfEmpty();
   loadNews();
   rebuildTaskAreaDropdowns();
 }
 
+async function bootApp() {
+  // Show connecting screen
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  const statusEl  = document.getElementById('connect-status');
+  const subEl     = document.getElementById('connect-sub');
+  const errEl     = document.getElementById('pat-error');
+  const retryBtn  = document.getElementById('retry-btn');
+  if (statusEl)  statusEl.textContent  = 'Connecting to your data…';
+  if (subEl)     subEl.textContent     = 'Reaching the sync server';
+  if (errEl)     errEl.style.display   = 'none';
+  if (retryBtn)  retryBtn.style.display = 'none';
+
+  // Load cached data immediately for instant UI while we fetch remote
+  const cached = loadLocal();
+  if (cached) { D = cached; }
+
+  try {
+    await pullData();
+    launchApp();
+  } catch (e) {
+    // Network unavailable — if we have cached data, launch with it
+    if (cached && cached.meta && cached.meta.seeded) {
+      launchApp();
+      setSyncStatus('err', 'Offline — using cached data');
+    } else {
+      // No data at all: show error and retry button
+      if (statusEl) statusEl.textContent = 'Could not connect';
+      if (subEl)    subEl.textContent    = e.message || 'Check your network or Worker URL';
+      if (errEl)  { errEl.textContent    = 'Make sure WORKER_URL is set correctly in the HTML file.'; errEl.style.display = 'block'; }
+      if (retryBtn) retryBtn.style.display = 'block';
+      if (!e.message.includes('fetch')) console.warn('[LifeOS] Boot error:', e.message);
+    }
+  }
+}
+
 window.addEventListener('beforeunload', () => { saveLocal(); });
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Load from localStorage first for instant display
-  const cached = loadLocal();
-  if (cached) D = cached;
-
-  if(PAT) {
-    setSyncStatus('syncing','Loading your data…');
-    findOrCreateGist().then(pullData).then(()=>launchApp()).catch(e=>{
-      // If gist fails but we have local data, launch anyway
-      if (cached && cached.meta && cached.meta.seeded) {
-        launchApp();
-        setSyncStatus('err','Offline — using local data');
-      } else {
-        document.getElementById('setup-screen').style.display = 'flex';
-      }
-      console.warn('[LifeOS] GitHub Gist sync failed:', e.message);
-    });
-  } else {
-    document.getElementById('setup-screen').style.display = 'flex';
-  }
   updateTopbar();
-  ['he-date','j-date','f-date','t-due','cm-date','cm-nextdate'].forEach(id=>{
-    const e=document.getElementById(id); if(e && e.type==='date') e.value=today();
+  ['he-date','j-date','f-date','t-due','cm-date','cm-nextdate'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e && e.type === 'date') e.value = today();
   });
   updateTimerDisplay();
+  bootApp();
 });
 
 // ═══════════════════════════════════════════════════
@@ -1914,7 +1887,7 @@ function modalSave() {
     focus:   ()=>{ const s=find('focusSessions',id); if(!s)return; s.task=mv('task');s.duration=parseInt(mv('dur'))||0;s.date=mv('date'); },
     rule:    ()=>{ const r=find('rules',id); if(!r)return; r.title=mv('title');r.cat=mv('cat');r.desc=mv('desc'); },
     person:  ()=>{ const p=find('people',id); if(!p)return; p.name=mv('name');p.role=mv('role');p.birthday=mv('birthday');p.phone=mv('phone');p.anniversary=mv('anniversary');p.lovelang=mv('lovelang');p.notes=mv('notes'); },
-    settings:()=>{ PAT=mv('pat').trim();GIST_ID=mv('gid').trim();localStorage.setItem('los-pat',PAT);localStorage.setItem('los-gist-id',GIST_ID); closeModal(); manualSync(); return; },
+    settings:()=>{ const wu=document.getElementById('m-worker')?.value.trim(); if(wu){localStorage.setItem('los-worker-url',wu);} GIST_ID=mv('gid').trim(); if(GIST_ID) localStorage.setItem('los-gist-id',GIST_ID); closeModal(); manualSync(); return; },
   };
   if(handlers[type]) handlers[type]();
   if(type!=='settings'){ closeModal(); scheduleSave(); renderAll(); }
@@ -2008,9 +1981,10 @@ function quickAdd() {
 }
 
 function showSettings() {
+  const workerUrl = localStorage.getItem('los-worker-url') || WORKER_URL || '';
   openModal('Settings',
-    `<div class="modal-field"><label>GitHub PAT (stored locally only)</label><input class="input" id="m-pat" type="password" value="${esc(PAT)}" placeholder="ghp_…"></div>
-     <div class="modal-field"><label>Gist ID (auto-detected)</label><input class="input" id="m-gid" value="${esc(GIST_ID)}" placeholder="auto"></div>
+    `<div class="modal-field"><label>Worker URL</label><input class="input" id="m-worker" value="${esc(workerUrl)}" placeholder="https://life-os-sync.mohamad-s-elcharif.workers.dev"></div>
+     <div class="modal-field"><label>Gist ID (auto-managed)</label><input class="input" id="m-gid" value="${esc(GIST_ID)}" placeholder="auto-detected" readonly style="opacity:0.6;"></div>
      <div class="modal-field" style="margin-top:16px;">
        <button class="btn btn-danger" style="width:100%;" onclick="if(confirm('Reset ALL local data?')){localStorage.clear();location.reload();}">⚠ Reset Everything</button>
      </div>`,
@@ -3338,18 +3312,23 @@ function setGroceryFilter(cat) {
 //  CONFIGURATION — Task Areas
 // ═══════════════════════════════════════════════════
 function initConfigPage() {
-  const patEl = document.getElementById('cfg-pat');
-  const gidEl = document.getElementById('cfg-gid');
-  if(patEl) patEl.value = PAT || '';
-  if(gidEl) gidEl.value = GIST_ID || '';
+  const workerEl = document.getElementById('cfg-worker');
+  const gidEl    = document.getElementById('cfg-gid');
+  if(workerEl) workerEl.value = localStorage.getItem('los-worker-url') || WORKER_URL || '';
+  if(gidEl)    gidEl.value    = GIST_ID || '';
   renderConfigAreas();
 }
 
-function saveGitConfig() {
-  const pat = document.getElementById('cfg-pat').value.trim();
-  const gid = document.getElementById('cfg-gid').value.trim();
-  if(pat) { PAT = pat; localStorage.setItem('los-pat', PAT); }
-  if(gid) { GIST_ID = gid; localStorage.setItem('los-gist-id', GIST_ID); }
+function saveWorkerConfig() {
+  const url = document.getElementById('cfg-worker').value.trim();
+  if(url) {
+    // Update the in-memory constant and persist it
+    Object.defineProperty(window, 'WORKER_URL_OVERRIDE', { value: url, writable: true, configurable: true });
+    localStorage.setItem('los-worker-url', url);
+    // Reset Gist ID so it is re-discovered via the new Worker
+    GIST_ID = '';
+    localStorage.removeItem('los-gist-id');
+  }
   manualSync();
 }
 
