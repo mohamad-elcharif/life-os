@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>LIFE OS — Mohamad</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1219'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%232ec4a0' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23f0b445'/%3E%3Cline x1='16' y1='6' x2='16' y2='10' stroke='%232ec4a0' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='16' y1='22' x2='16' y2='26' stroke='%232ec4a0' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='6' y1='16' x2='10' y2='16' stroke='%232ec4a0' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='22' y1='16' x2='26' y2='16' stroke='%232ec4a0' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1297,7 +1300,6 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
         </div>
       </div>
 
-    </div><!-- /page-body -->
 
       <!-- ══════ PRAYER TIMES ══════ -->
       <div class="page" id="page-prayer">
@@ -1570,6 +1572,7 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
           </div>
         </div>
       </div>
+    </div><!-- /page-body -->
   </main>
 </div><!-- /app -->
 
@@ -1706,8 +1709,12 @@ async function pullData() {
   localStorage.setItem('los-gist-id', GIST_ID);
   const remote = Object.assign(defaultData(), JSON.parse(data.content || '{}'));
   const local  = loadLocal();
-  if (local && local.meta && local.meta.lastModified &&
-      (!remote.meta.lastModified || local.meta.lastModified > remote.meta.lastModified)) {
+  // Only keep local data if there are unpushed changes (modified after last sync).
+  // Otherwise remote (Gist) is the source of truth.
+  const hasUnpushedLocal = local && local.meta &&
+    local.meta.lastModified && local.meta.lastSync &&
+    local.meta.lastModified > local.meta.lastSync;
+  if (hasUnpushedLocal) {
     D = local;
   } else {
     D = remote;
@@ -1783,7 +1790,7 @@ async function bootApp() {
     launchApp();
   } catch (e) {
     // Network unavailable — if we have cached data, launch with it
-    if (cached && cached.meta && cached.meta.seeded) {
+    if (cached) {
       launchApp();
       setSyncStatus('err', 'Offline — using cached data');
     } else {
@@ -2332,7 +2339,7 @@ let focusTask=null, timerInterval=null, timerSecs=25*60, timerRunning=false, tim
 
 function renderFocus() {
   el('focus-picker',D.tasks.filter(t=>!t.done).map(t=>`
-    <div class="row-item" style="cursor:pointer;" onclick="setFocusTask('${t.id}','${esc(t.text).replace(/'/g,"\\'")}')">
+    <div class="row-item" style="cursor:pointer;" onclick="setFocusTask('${t.id}')">
       <div class="prio-dot p-${t.prio}"></div>
       <span style="flex:1;font-size:12px;color:var(--paper)">${esc(t.text)}</span>
       <span class="chip chip-${catColor[t.area]||'gold'}">${t.area}</span>
@@ -2347,7 +2354,7 @@ function renderFocus() {
   el('focus-total',todaySess.reduce((a,b)=>a+(b.duration||0),0)+'m');
 }
 
-function setFocusTask(id,name) { focusTask={id,name}; el('focus-task-label',name); }
+function setFocusTask(id) { const t=find('tasks',id); if(!t)return; focusTask={id,name:t.text}; el('focus-task-label',esc(t.text)); }
 function setTimer(min){ if(timerRunning)return; timerSet=min; timerSecs=min*60; updateTimerDisplay(); }
 function updateTimerDisplay(){ const m=Math.floor(timerSecs/60),s=timerSecs%60; el('focus-display',`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`); }
 function startTimer(){
@@ -2604,6 +2611,13 @@ function renderAll() {
 // ─── SEED SAMPLE DATA ───
 function seedIfEmpty() {
   if(D.meta.seeded) return;
+  // Don't overwrite real data — only seed if truly empty
+  const hasData = (D.tasks && D.tasks.length) || (D.habits && D.habits.length) ||
+    (D.health && D.health.length) || (D.transactions && D.transactions.length) ||
+    (D.goals && D.goals.length) || (D.projects && D.projects.length) ||
+    (D.journal && D.journal.length) || (D.rules && D.rules.length) ||
+    (D.people && D.people.length);
+  if (hasData) { D.meta.seeded = true; return; }
   D.tasks=[
     {id:uid(),text:'Deploy WhatsApp bot to Railway',area:'tech',prio:'high',bucket:'today',due:today(),notes:'Twilio sandbox fix needed',done:false,created:now()},
     {id:uid(),text:'Review Deye Cloud API endpoints',area:'tech',prio:'med',bucket:'today',due:today(),notes:'',done:false,created:now()},
@@ -3059,7 +3073,6 @@ function renderMaintenance() {
     </div>`).join('') : '<div class="empty"><div class="empty-icon">🔧</div>No service records yet. Log your first maintenance.</div>';
 
   // Upcoming
-  const todayMs = new Date().getTime();
   const upcomingEl = document.getElementById('maint-upcoming');
   if(upcomingEl) {
     const upcoming = records.filter(r => r.nextDate).map(r => {
