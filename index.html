@@ -1347,7 +1347,7 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
             <div class="card-eyebrow" style="margin-bottom:10px;">Calculation Method</div>
             <div style="font-size:11px;color:var(--silver);line-height:1.8;">
               <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Location</span> — Tripoli, Lebanon (34.43°N, 35.85°E)</div>
-              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Method</span> — Egyptian General Authority of Survey</div>
+              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Method</span> — Egyptian General Authority + Dar al-Fatwa Lebanon</div>
               <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Madhab</span> — Shafi'i</div>
               <div><span style="color:var(--gold);font-family:var(--r-mono);">Source</span> — Aladhan API (live)</div>
             </div>
@@ -1580,6 +1580,10 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
 const GIST_DESC = 'life-os-data-v2';
 const SYNC_DEBOUNCE = 2500;
 
+// Data version — bump this when the data shape or sync logic changes.
+// Any localStorage from a different version is wiped on boot.
+const DATA_VERSION = 3;
+
 // ── Cloudflare Worker proxy URL ──────────────────────────────────────────────
 // Your PAT lives in the Worker's environment variables on Cloudflare's servers.
 // It never touches the browser. Replace this URL after deploying worker.js.
@@ -1628,14 +1632,26 @@ let D = defaultData();
 
 // ─── Local persistence (instant, survives reload) ───
 const LOCAL_KEY = 'los-data';
+const LOCAL_VER_KEY = 'los-data-ver';
+
 function saveLocal() {
-  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(D)); } catch(e) { /* quota exceeded */ }
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(D));
+    localStorage.setItem(LOCAL_VER_KEY, String(DATA_VERSION));
+  } catch(e) { /* quota exceeded */ }
 }
 function loadLocal() {
   try {
+    // If the stored version doesn't match current code, wipe it
+    const storedVer = parseInt(localStorage.getItem(LOCAL_VER_KEY) || '0', 10);
+    if (storedVer !== DATA_VERSION) {
+      localStorage.removeItem(LOCAL_KEY);
+      localStorage.removeItem(LOCAL_VER_KEY);
+      return null;
+    }
     const raw = localStorage.getItem(LOCAL_KEY);
     if (raw) { const parsed = JSON.parse(raw); return Object.assign(defaultData(), parsed); }
-  } catch(e) { /* corrupt */ }
+  } catch(e) { localStorage.removeItem(LOCAL_KEY); /* corrupt */ }
   return null;
 }
 
@@ -1757,16 +1773,18 @@ async function bootApp() {
   if (errEl)     errEl.style.display   = 'none';
   if (retryBtn)  retryBtn.style.display = 'none';
 
-  // Load cached data immediately for instant UI while we fetch remote
-  const cached = loadLocal();
-  if (cached) { D = cached; }
+  // Do NOT pre-load localStorage into D before pulling from remote.
+  // This is the #1 cause of stale data on mobile: localStorage wins
+  // over the remote Gist. D stays as defaultData() until pullData fills it.
 
   try {
     await pullData();
     launchApp();
   } catch (e) {
-    // Network unavailable — if we have cached data, launch with it
+    // Network unavailable — try localStorage as offline fallback
+    const cached = loadLocal();
     if (cached) {
+      D = cached;
       launchApp();
       setSyncStatus('err', 'Offline — using cached data');
     } else {
@@ -2612,8 +2630,9 @@ async function loadPrayerTimes() {
   const mm = String(d.getMonth()+1).padStart(2,'0');
   const yyyy = d.getFullYear();
   // Aladhan API: date is a path parameter, not a query parameter
-  // Use exact coordinates for Tripoli, Lebanon and Egyptian General Authority method (common in Levant)
-  const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=34.4367&longitude=35.8497&method=5&school=0`;
+  // Use exact coordinates for Tripoli, Lebanon and Egyptian General Authority method
+  // tune: +2 min on Maghrib and Isha to match Dar al-Fatwa Lebanon published times
+  const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=34.4367&longitude=35.8497&method=5&school=0&tune=0,0,0,0,0,2,0,2,0`;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -2678,8 +2697,10 @@ function computePrayerTimesLocally(date) {
   const sunrise = sunAngleTime(-0.833, true);
   const dhuhr   = 12 - EqT - lng/15 + tzOffsetHours;
   const asr     = asrTime(1); // Shafi'i
-  const maghrib = sunAngleTime(-0.833, false);
-  const isha    = sunAngleTime(-17.5, false);  // Egyptian method: 17.5°
+  const sunset  = sunAngleTime(-0.833, false);
+  const maghrib = sunset !== null ? sunset + 2/60 : null; // +2 min (Dar al-Fatwa Lebanon)
+  const isha_raw= sunAngleTime(-17.5, false);  // Egyptian method: 17.5°
+  const isha    = isha_raw !== null ? isha_raw + 2/60 : null; // +2 min (Dar al-Fatwa Lebanon)
 
   function toHHMM(h) {
     if (h === null) return '00:00';
