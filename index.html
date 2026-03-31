@@ -1705,7 +1705,6 @@ function launchApp() {
   setInterval(updateTopbar, 30000);
   setInterval(() => syncNow('pull'), 60000);
   renderAll();
-  seedIfEmpty();
   loadNews();
   rebuildTaskAreaDropdowns();
 }
@@ -2566,7 +2565,7 @@ function seedIfEmpty() {
     {id:uid(),name:'Your Wife',role:'wife',birthday:'',phone:'',anniversary:'',lovelang:'words',notes:'She needs to feel seen and appreciated. Tell her what she means to you, often.',created:now()},
   ];
   D.meta.seeded = true;
-  scheduleSave(); renderAll();
+  // Note: do NOT call scheduleSave() here — demo data must never be pushed to the remote Gist
 }
 // ═══════════════════════════════════════════════════
 //  PRAYER TIMES — Tripoli, Lebanon
