@@ -535,7 +535,7 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
 .status-pip { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
 /* ═══════════ OVERVIEW ═══════════ */
-.ov-hero { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.ov-hero { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
 .ov-mid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 16px; }
 
 /* ═══════════ NEWS CARD ═══════════ */
@@ -807,7 +807,6 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
       <div class="nav-section">Core</div>
       <div class="nav-item active" onclick="goTo('overview',this)"><span class="icon">◈</span> Overview</div>
       <div class="nav-item" onclick="goTo('tasks',this)"><span class="icon">◻</span> Tasks <span class="badge" id="badge-tasks" style="display:none">0</span></div>
-      <div class="nav-item" onclick="goTo('habits',this)"><span class="icon">◎</span> Habits</div>
       <div class="nav-item" onclick="goTo('focus',this)"><span class="icon">◉</span> Focus</div>
 
       <div class="nav-section">Body & Mind</div>
@@ -873,11 +872,6 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
             <div class="card-value gold" id="ov-tasks">—/—</div>
             <div class="card-sub" id="ov-tasks-sub">open today</div>
           </div>
-          <div class="card card-accent-top card-teal card-glow-teal">
-            <div class="card-eyebrow">Best Streak</div>
-            <div class="card-value teal" id="ov-streak">—</div>
-            <div class="card-sub">days running</div>
-          </div>
           <div class="card card-accent-top card-sky">
             <div class="card-eyebrow">Net Balance</div>
             <div class="card-value sky" id="ov-net" style="font-size:28px;">$—</div>
@@ -900,10 +894,6 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
             <div class="card" style="margin-bottom:14px;">
               <div class="card-eyebrow" style="margin-bottom:12px;">Active Goals</div>
               <div id="ov-goals"></div>
-            </div>
-            <div class="card" style="margin-bottom:14px;">
-              <div class="card-eyebrow" style="margin-bottom:12px;">Mood This Week</div>
-              <div id="ov-mood" style="display:flex;gap:4px;justify-content:space-between;"></div>
             </div>
             <div class="card">
               <div class="card-eyebrow" style="margin-bottom:10px;">My People — Upcoming</div>
@@ -958,46 +948,6 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
             <div class="card">
               <div class="card-eyebrow" style="margin-bottom:12px;">Completed <span class="chip chip-teal" id="t-done-ct">0</span></div>
               <div id="tasks-done"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══════ HABITS ══════ -->
-      <div class="page" id="page-habits">
-        <div class="section-head">
-          <div><div class="section-title">Habits</div><div class="section-sub">Small consistent actions build extraordinary lives.</div></div>
-          <button class="btn btn-gold btn-sm" onclick="openPanel('habit-panel')">+ New Habit</button>
-        </div>
-        <div class="form-panel" id="habit-panel">
-          <div class="g2">
-            <div class="field"><label>Habit Name</label><input class="input" id="h-name" placeholder="e.g. Morning workout"></div>
-            <div class="field"><label>Category</label>
-              <select class="input" id="h-cat"><option value="health">Health</option><option value="mind">Mind</option><option value="work">Work</option><option value="social">Social</option><option value="finance">Finance</option></select>
-            </div>
-            <div class="field"><label>Frequency</label>
-              <select class="input" id="h-freq"><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option></select>
-            </div>
-            <div class="field"><label>Target Time</label><input class="input" id="h-time" type="time" value="08:00"></div>
-          </div>
-          <div class="form-row" style="margin-top:14px;">
-            <button class="btn btn-gold" onclick="addHabit()">Save Habit</button>
-            <button class="btn" onclick="closePanel('habit-panel')">Cancel</button>
-          </div>
-        </div>
-        <div class="g2">
-          <div class="card">
-            <div class="card-eyebrow" style="margin-bottom:14px;">Today's Check-in</div>
-            <div id="habits-checkin"></div>
-          </div>
-          <div>
-            <div class="card" style="margin-bottom:14px;">
-              <div class="card-eyebrow" style="margin-bottom:10px;">28-Day Heatmap</div>
-              <div class="hm-grid" id="habit-heatmap"></div>
-            </div>
-            <div class="card">
-              <div class="card-eyebrow" style="margin-bottom:12px;">Analytics</div>
-              <div id="habit-analytics"></div>
             </div>
           </div>
         </div>
@@ -1347,9 +1297,9 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.6; }
             <div class="card-eyebrow" style="margin-bottom:10px;">Calculation Method</div>
             <div style="font-size:11px;color:var(--silver);line-height:1.8;">
               <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Location</span> — Tripoli, Lebanon (34.43°N, 35.85°E)</div>
-              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Method</span> — Egyptian General Authority + Dar al-Fatwa Lebanon</div>
+              <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Method</span> — Dar al-Fatwa Lebanon (Fajr 18.5°, Isha 17.5°)</div>
               <div style="margin-bottom:6px;"><span style="color:var(--gold);font-family:var(--r-mono);">Madhab</span> — Shafi'i</div>
-              <div><span style="color:var(--gold);font-family:var(--r-mono);">Source</span> — Aladhan API (live)</div>
+              <div><span style="color:var(--gold);font-family:var(--r-mono);">Source</span> — Aladhan API (custom method matching Dar al-Fatwa)</div>
             </div>
             <div class="divider"></div>
             <button class="btn btn-teal btn-sm" onclick="loadPrayerTimes()">↻ Refresh Times</button>
@@ -1679,11 +1629,16 @@ async function workerFetch(path, opts = {}) {
   const sep = path.includes('?') ? '&' : '?';
   const url = opts.method && opts.method !== 'GET'
     ? EFFECTIVE_WORKER_URL() + path
-    : EFFECTIVE_WORKER_URL() + path + sep + '_t=' + Date.now();
+    : EFFECTIVE_WORKER_URL() + path + sep + '_t=' + Date.now() + '_r=' + Math.random().toString(36).slice(2);
   const r = await fetch(url, {
     ...opts,
     cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      ...(opts.headers || {})
+    }
   });
   if (!r.ok) {
     const msg = await r.text().catch(() => r.status);
@@ -1810,11 +1765,18 @@ window.addEventListener('DOMContentLoaded', () => {
   bootApp();
 });
 
+// Re-sync when tab/app becomes visible again (fixes Android stale data)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    syncNow('pull');
+  }
+});
+
 // ═══════════════════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════════════════
 const PAGE_TITLES = {
-  overview:'Overview', tasks:'Tasks', habits:'Habits', focus:'Focus',
+  overview:'Overview', tasks:'Tasks', focus:'Focus',
   health:'Health', journal:'Journal', goals:'Goals', projects:'Projects',
   finance:'Finance', news:'News & Trends', rules:'My Rules', people:'My People',
   prayer:'🌙 Prayer Times', notepad:'📝 Notepad', groceries:'🛒 Groceries',
@@ -2071,8 +2033,7 @@ function renderOverview() {
   el('ov-tasks',`${doneTasks.length}/${todayTasks.length}`);
   el('ov-tasks-sub',`${todayTasks.length-doneTasks.length} remaining`);
 
-  const streak=D.habits.length?Math.max(...D.habits.map(h=>h.streak||0)):0;
-  el('ov-streak',streak+'<span style="font-size:18px;color:var(--fog)">d</span>');
+
 
   const inc=D.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+Number(b.amount),0);
   const exp=D.transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+Number(b.amount),0);
@@ -2098,13 +2059,7 @@ function renderOverview() {
       <div class="prog-track"><div class="prog-fill" style="width:${g.progress}%"></div></div>
     </div>`).join(''):empty('No goals yet.'));
 
-  // Mood
-  const moods=D.journal.slice(-7);
-  const days=['M','T','W','T','F','S','S'];
-  el('ov-mood',days.map((d,i)=>{
-    const m=moods[i];
-    return `<div style="text-align:center;flex:1;"><div style="font-size:22px;">${m?.mood||'·'}</div><div style="font-size:8px;color:var(--fog);margin-top:3px;font-family:var(--r-mono);">${d}</div></div>`;
-  }).join(''));
+
 
   // People reminders
   const upcoming=getUpcomingDates().slice(0,3);
@@ -2555,7 +2510,7 @@ function renderNewsData(data) {
 
 // ─── RENDER ALL ───
 function renderAll() {
-  renderOverview(); renderTasks(); renderHabits(); renderHealth();
+  renderOverview(); renderTasks(); renderHealth();
   renderFinance(); renderGoals(); renderProjects(); renderJournal();
   renderFocus(); renderRules(); renderPeople();
   renderConfigAreas(); renderMaintenance(); renderHomeChecklist(); renderGroceries();
@@ -2632,7 +2587,7 @@ async function loadPrayerTimes() {
   // Aladhan API: date is a path parameter, not a query parameter
   // Use exact coordinates for Tripoli, Lebanon and Egyptian General Authority method
   // tune: +2 min on Maghrib and Isha to match Dar al-Fatwa Lebanon published times
-  const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=34.4367&longitude=35.8497&method=5&school=0&tune=0,0,0,0,0,2,0,2,0`;
+  const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=34.4367&longitude=35.8497&method=99&methodSettings=18.5,null,17.5&school=0&timezonestring=Asia/Beirut&tune=0,0,0,0,0,2,0,0,0`;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -2663,7 +2618,7 @@ async function loadPrayerTimes() {
 }
 
 // ── Astronomical prayer time calculator for Tripoli, Lebanon ──
-// Method: Egyptian General Authority  |  Fajr: 19.5°  Isha: 17.5°
+// Method: Dar al-Fatwa Lebanon  |  Fajr: 18.5°  Isha: 17.5°
 // Lat: 34.4367  Lng: 35.8497  TZ offset: +2 (winter) / +3 (summer, DST)
 function computePrayerTimesLocally(date) {
   const lat = 34.4367, lng = 35.8497;
@@ -2693,14 +2648,14 @@ function computePrayerTimesLocally(date) {
     return sunAngleTime(angle, false);
   }
 
-  const fajr    = sunAngleTime(-19.5, true);   // Egyptian method: 19.5°
+  const fajr    = sunAngleTime(-18.5, true);   // Dar al-Fatwa Lebanon: 18.5°
   const sunrise = sunAngleTime(-0.833, true);
   const dhuhr   = 12 - EqT - lng/15 + tzOffsetHours;
   const asr     = asrTime(1); // Shafi'i
   const sunset  = sunAngleTime(-0.833, false);
   const maghrib = sunset !== null ? sunset + 2/60 : null; // +2 min (Dar al-Fatwa Lebanon)
-  const isha_raw= sunAngleTime(-17.5, false);  // Egyptian method: 17.5°
-  const isha    = isha_raw !== null ? isha_raw + 2/60 : null; // +2 min (Dar al-Fatwa Lebanon)
+  const isha_raw= sunAngleTime(-17.5, false);  // Dar al-Fatwa Lebanon: 17.5°
+  const isha    = isha_raw !== null ? isha_raw : null; // No tune needed — 17.5° matches Dar al-Fatwa
 
   function toHHMM(h) {
     if (h === null) return '00:00';
